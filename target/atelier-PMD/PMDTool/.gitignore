@@ -1,0 +1,12 @@
+
+\.idea
+\out
+\target
+\tmp
+*.iml
+
+*.jar
+
+log\.csv
+
+main/resources/finals
