@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -15,7 +16,6 @@ import javax.servlet.http.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import nl.utwente.atelier.pmd.util.Hex;
 
 public class WebhookHandler {
     private HttpClient client;
@@ -58,10 +58,10 @@ public class WebhookHandler {
             hmac.init(key);
 
             var rawSignature = hmac.doFinal(body);
-            var computedSignature = Hex.bytesToHex(rawSignature);
+            var computedSignature = Base64.getEncoder().encodeToString(rawSignature);
 
             if (!computedSignature.equals(signature)) {
-                throw new InvalidWebhookRequest("Invalid signature");
+                throw new InvalidWebhookRequest("Invalid signature.");
             }
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new CryptoException(e);
@@ -105,6 +105,7 @@ public class WebhookHandler {
         // We only handle processing files, so restrict to those
         if (name.endsWith(".pde")) {
             var fileID = file.get("ID").getAsString();
+            System.out.printf("Processing %s (ID: %s)", name, fileID);
 
             // TODO: 
             // - Do authentication dance
