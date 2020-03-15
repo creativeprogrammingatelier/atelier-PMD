@@ -70,6 +70,10 @@ public class WebhookHandler {
 
     public void handleWebhook(HttpServletRequest request, HttpServletResponse response) {
         try {
+            // I'm sorry.
+            // The inner catch handler may throw an IOException, which should be handled in the
+            // same way as any thrown in try-block. The alternative would be another try-catch
+            // inside the catch, with duplicated error-handling code.
             try {
                 checkUserAgent(request);
                 var rawBody = request.getInputStream().readAllBytes();
