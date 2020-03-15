@@ -8,15 +8,6 @@
     <display-name>Atelier PMD Plugin</display-name>
 
     <servlet>
-        <servlet-name>Main</servlet-name>
-        <servlet-class>nl.utwente.atelier.pmd.server.Main</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>Main</servlet-name>
-        <url-pattern>/</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
         <servlet-name>Webhook</servlet-name>
         <servlet-class>nl.utwente.atelier.pmd.server.Webhook</servlet-class>
     </servlet>
