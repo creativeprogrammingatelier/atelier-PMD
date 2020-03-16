@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -16,25 +16,28 @@ import javax.servlet.http.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.ThreadSafeReportListener;
+import net.sourceforge.pmd.stat.Metric;
+import nl.utwente.atelier.api.Authentication;
+import nl.utwente.atelier.exceptions.CryptoException;
+import nl.utwente.atelier.pmd.PMDFileProcessor;
 
 public class WebhookHandler {
     private HttpClient client;
+    private Authentication auth;
     private String webhookSecret;
+    private PMDFileProcessor pmd = new PMDFileProcessor();
 
-    public WebhookHandler(HttpClient client, String webhookSecret) {
+    public WebhookHandler(HttpClient client, Authentication auth, String webhookSecret) {
         this.client = client;
+        this.auth = auth;
         this.webhookSecret = webhookSecret;
     }
 
     private class InvalidWebhookRequest extends Throwable {
         public InvalidWebhookRequest(String reason) {
             super("Invalid request. " + reason);
-        }
-    }
-
-    private class CryptoException extends Exception {
-        public CryptoException(Exception ex) {
-            super(ex);
         }
     }
 
@@ -50,7 +53,7 @@ public class WebhookHandler {
         if (signature == null) {
             throw new InvalidWebhookRequest("No signature provided.");
         }
-        
+
         try {
             var secret = webhookSecret.getBytes();
             var key = new SecretKeySpec(secret, "HmacSHA1");
@@ -69,11 +72,12 @@ public class WebhookHandler {
     }
 
     public void handleWebhook(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("Received new webhook request.");
         try {
             // I'm sorry.
-            // The inner catch handler may throw an IOException, which should be handled in the
-            // same way as any thrown in try-block. The alternative would be another try-catch
-            // inside the catch, with duplicated error-handling code.
+            // The inner catch handler may throw an IOException, which should be handled in
+            // the same way as any thrown in try-block. The alternative would be another
+            // try-catch inside the catch, with duplicated error-handling code.
             try {
                 checkUserAgent(request);
                 var rawBody = request.getInputStream().readAllBytes();
@@ -88,6 +92,7 @@ public class WebhookHandler {
                         break;
                 }
             } catch (InvalidWebhookRequest e) {
+                System.out.println(e.getMessage());
                 response.setStatus(400);
                 var writer = response.getWriter();
                 writer.println(e.getMessage());
@@ -100,26 +105,38 @@ public class WebhookHandler {
         }
     }
 
-    private void handleFileSubmission(JsonObject file) {
-        var name = file.get("name").getAsString();
-        // We only handle processing files, so restrict to those
-        if (name.endsWith(".pde")) {
-            var fileID = file.get("ID").getAsString();
-            System.out.printf("Processing %s (ID: %s)", name, fileID);
+    private class CommentCreatingReportListener implements ThreadSafeReportListener {
+        private String fileID;
 
-            // TODO: 
-            // - Do authentication dance
-            // - Get the file body through API
-            // - Process the file with PMD
-            // - Submit comments back to Atelier
-            var fileRequest = HttpRequest.newBuilder().GET()
-                    .uri(URI.create("https://linux571.ewi.utwente.nl/api/file/" + fileID + "/body"))
-                    .setHeader("Authorization", "Bearer token").build();
-    
-            client.sendAsync(fileRequest, HttpResponse.BodyHandlers.ofInputStream())
-            .thenAccept(res -> {
-                res.body();
-            });
+        public CommentCreatingReportListener(String fileID) {
+            this.fileID = fileID;
+        }
+
+        @Override
+        public void ruleViolationAdded(RuleViolation ruleViolation) {
+            System.out.println("Violation in " + ruleViolation.getFilename() + ":" + ruleViolation.getBeginLine() + ": " + ruleViolation.getDescription());
+        }
+
+        @Override
+        public void metricAdded(Metric metric) { }
+    }
+
+    private void handleFileSubmission(JsonObject file) throws CryptoException {
+        var fileName = file.get("name").getAsString();
+        // We only handle processing files, so restrict to those
+        if (fileName.endsWith(".pde")) {
+            var fileID = file.get("ID").getAsString();
+            System.out.printf("Processing %s (ID: %s)%n", fileName, fileID);
+
+            auth.getCurrentToken()
+                .thenCompose(token -> {
+                    var fileRequest = HttpRequest.newBuilder().GET()
+                        .uri(URI.create("http://localhost:5000/api/file/" + fileID + "/body"))
+                        .setHeader("Authorization", "Bearer " + token).build();
+                    return client.sendAsync(fileRequest, BodyHandlers.ofInputStream()); })
+                .thenApply(res -> res.body())
+                .thenAccept(input -> pmd.ProcessFile(input, fileName, new CommentCreatingReportListener(fileID)))
+                .handle((res, e) -> { if (e != null) e.printStackTrace(); return res; });
         }
     }
 }
