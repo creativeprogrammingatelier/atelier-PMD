@@ -1,10 +1,7 @@
 package nl.utwente.atelier.api;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse.BodyHandlers;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -14,6 +11,9 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.gson.JsonParser;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 
 import nl.utwente.atelier.api.utils.PemUtils;
 import nl.utwente.atelier.exceptions.CryptoException;
@@ -49,41 +49,24 @@ public class Authentication {
         if (currentToken == null || currentTokenExp == null || currentTokenExp.isBefore(Instant.now().plusSeconds(15))) {
             System.out.println("Requesting new authentication token.");
             var token = issueToken();
-            var authRequest = HttpRequest.newBuilder()
-                .GET()
-                .uri(URI.create("http://localhost:5000/api/auth/token"))
-                .header("Authorization", "Bearer " + token)
-                .build();
+            var authRequest = new HttpGet("http://localhost:5000/api/auth/token");
+            authRequest.addHeader("Authorization", "Bearer " + token);
             try {
-                var res = client.send(authRequest, BodyHandlers.ofString());
-                if (res.statusCode() == 200) {
-                    var resToken = JsonParser.parseString(res.body())
+                var res = client.execute(authRequest);
+                if (res.getStatusLine().getStatusCode() == 200) {
+                    var resToken = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()))
                         .getAsJsonObject()
                         .get("token")
                         .getAsString();
                     currentToken = resToken;
                     currentTokenExp = JWT.decode(resToken).getExpiresAt().toInstant();
                 } else {
-                    System.out.println("Request was unsuccesful, got status " + res.statusCode() + " with body: " + res.body());
+                    System.out.println("Request was unsuccesful, got status " + res.getStatusLine().getStatusCode());
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             } catch (NullPointerException e) {
                 System.out.println("Got null when trying to read token.");
             }
         }
         return currentToken;
-    }
-
-    public static void main(String[] args) {
-        try {
-            var httpClient = HttpClient.newHttpClient();
-            var auth = new Authentication("XqY+FynTRQKGT94LIsCGbA", "D:\\Arthur\\GitSource\\UTwente\\MOD11\\atelier-pmd\\keys\\jwtRS256.key.pub", "D:\\Arthur\\GitSource\\UTwente\\MOD11\\atelier-pmd\\keys\\jwtRS256.key", httpClient);
-            System.out.println("Got token: " + auth.getCurrentToken());
-        } catch (CryptoException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

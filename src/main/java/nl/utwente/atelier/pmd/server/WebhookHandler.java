@@ -1,10 +1,6 @@
 package nl.utwente.atelier.pmd.server;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -15,6 +11,10 @@ import javax.servlet.http.*;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import nl.utwente.atelier.exceptions.PMDException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 
 import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.ThreadSafeReportListener;
@@ -99,7 +99,7 @@ public class WebhookHandler {
                 writer.flush();
                 writer.close();
             }
-        } catch (IOException | CryptoException e) {
+        } catch (IOException | CryptoException | PMDException e) {
             response.setStatus(500);
             e.printStackTrace();
         }
@@ -121,7 +121,7 @@ public class WebhookHandler {
         public void metricAdded(Metric metric) { }
     }
 
-    private void handleFileSubmission(JsonObject file) throws CryptoException, IOException {
+    private void handleFileSubmission(JsonObject file) throws CryptoException, IOException, PMDException {
         var fileName = file.get("name").getAsString();
         // We only handle processing files, so restrict to those
         if (fileName.endsWith(".pde")) {
@@ -130,19 +130,14 @@ public class WebhookHandler {
 
             var token = auth.getCurrentToken();
             if (token != null) {
-                var fileRequest = HttpRequest.newBuilder().GET()
-                    .uri(URI.create("http://192.168.10.9:5000/api/file/" + fileID + "/body"))
-                    .setHeader("Authorization", "Bearer " + token).build();
+                var fileRequest = new HttpGet("http://localhost:5000/api/file/" + fileID + "/body");
+                fileRequest.addHeader("Authorization", "Bearer " + token);
 
-                try {
-                    var res = client.send(fileRequest, BodyHandlers.ofInputStream());
-                    if (res.statusCode() < 400) {
-                        pmd.ProcessFile(res.body(), fileName, new CommentCreatingReportListener(fileID));
-                    } else {
-                        System.out.printf("Request for file %s returned status %d.", fileID, res.statusCode());
-                    }
-                } catch (InterruptedException e) {
-                    System.out.printf("Request for file (ID: %s) failed.%n", fileID);
+                var res = client.execute(fileRequest);
+                if (res.getStatusLine().getStatusCode() < 400) {
+                    pmd.ProcessFile(res.getEntity().getContent(), fileName, new CommentCreatingReportListener(fileID));
+                } else {
+                    System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
                 }
             }
         }
