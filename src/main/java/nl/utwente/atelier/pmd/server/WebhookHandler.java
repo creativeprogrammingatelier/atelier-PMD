@@ -121,22 +121,30 @@ public class WebhookHandler {
         public void metricAdded(Metric metric) { }
     }
 
-    private void handleFileSubmission(JsonObject file) throws CryptoException {
+    private void handleFileSubmission(JsonObject file) throws CryptoException, IOException {
         var fileName = file.get("name").getAsString();
         // We only handle processing files, so restrict to those
         if (fileName.endsWith(".pde")) {
             var fileID = file.get("ID").getAsString();
             System.out.printf("Processing %s (ID: %s)%n", fileName, fileID);
 
-            auth.getCurrentToken()
-                .thenCompose(token -> {
-                    var fileRequest = HttpRequest.newBuilder().GET()
-                        .uri(URI.create("http://localhost:5000/api/file/" + fileID + "/body"))
-                        .setHeader("Authorization", "Bearer " + token).build();
-                    return client.sendAsync(fileRequest, BodyHandlers.ofInputStream()); })
-                .thenApply(res -> res.body())
-                .thenAccept(input -> pmd.ProcessFile(input, fileName, new CommentCreatingReportListener(fileID)))
-                .handle((res, e) -> { if (e != null) e.printStackTrace(); return res; });
+            var token = auth.getCurrentToken();
+            if (token != null) {
+                var fileRequest = HttpRequest.newBuilder().GET()
+                    .uri(URI.create("http://192.168.10.9:5000/api/file/" + fileID + "/body"))
+                    .setHeader("Authorization", "Bearer " + token).build();
+
+                try {
+                    var res = client.send(fileRequest, BodyHandlers.ofInputStream());
+                    if (res.statusCode() < 400) {
+                        pmd.ProcessFile(res.body(), fileName, new CommentCreatingReportListener(fileID));
+                    } else {
+                        System.out.printf("Request for file %s returned status %d.", fileID, res.statusCode());
+                    }
+                } catch (InterruptedException e) {
+                    System.out.printf("Request for file (ID: %s) failed.%n", fileID);
+                }
+            }
         }
     }
 }

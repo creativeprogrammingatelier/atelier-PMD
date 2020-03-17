@@ -9,8 +9,6 @@ import java.nio.file.Path;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -26,7 +24,6 @@ public class Authentication {
     private RSAPrivateKey privateKey;
     private HttpClient client;
 
-    private AtomicBoolean fetching = new AtomicBoolean(false);
     private String currentToken = null;
     private Instant currentTokenExp = null;
 
@@ -48,24 +45,8 @@ public class Authentication {
         }
     }
 
-    public synchronized CompletableFuture<String> getCurrentToken() throws CryptoException {
-        while (fetching.get()) {
-            try {
-                synchronized(fetching) {
-                    fetching.wait();
-                }
-            } catch (InterruptedException e) {
-                Thread.yield();
-            }
-        }
-
-        if (currentToken != null && currentTokenExp != null && currentTokenExp.isAfter(Instant.now().plusSeconds(30))) {
-            System.out.println("Returning existing authentication token.");
-            var result = new CompletableFuture<String>();
-            result.complete(currentToken);
-            return result;
-        } else {
-            fetching.set(true);
+    public synchronized String getCurrentToken() throws CryptoException, IOException {
+        if (currentToken == null || currentTokenExp == null || currentTokenExp.isBefore(Instant.now().plusSeconds(15))) {
             System.out.println("Requesting new authentication token.");
             var token = issueToken();
             var authRequest = HttpRequest.newBuilder()
@@ -73,23 +54,36 @@ public class Authentication {
                 .uri(URI.create("http://localhost:5000/api/auth/token"))
                 .header("Authorization", "Bearer " + token)
                 .build();
-            return client
-                .sendAsync(authRequest, BodyHandlers.ofString())
-                .thenApply(res -> {
+            try {
+                var res = client.send(authRequest, BodyHandlers.ofString());
+                if (res.statusCode() == 200) {
                     var resToken = JsonParser.parseString(res.body())
                         .getAsJsonObject()
                         .get("token")
                         .getAsString();
                     currentToken = resToken;
                     currentTokenExp = JWT.decode(resToken).getExpiresAt().toInstant();
-                    return resToken; })
-                .handle((res, e) -> {
-                    fetching.set(false);
-                    synchronized (fetching) {
-                        fetching.notifyAll();
-                    }
-                    
-                    return res; });
+                } else {
+                    System.out.println("Request was unsuccesful, got status " + res.statusCode() + " with body: " + res.body());
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (NullPointerException e) {
+                System.out.println("Got null when trying to read token.");
+            }
+        }
+        return currentToken;
+    }
+
+    public static void main(String[] args) {
+        try {
+            var httpClient = HttpClient.newHttpClient();
+            var auth = new Authentication("XqY+FynTRQKGT94LIsCGbA", "D:\\Arthur\\GitSource\\UTwente\\MOD11\\atelier-pmd\\keys\\jwtRS256.key.pub", "D:\\Arthur\\GitSource\\UTwente\\MOD11\\atelier-pmd\\keys\\jwtRS256.key", httpClient);
+            System.out.println("Got token: " + auth.getCurrentToken());
+        } catch (CryptoException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
