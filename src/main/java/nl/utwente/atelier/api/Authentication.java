@@ -2,7 +2,6 @@ package nl.utwente.atelier.api;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Path;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
@@ -15,11 +14,12 @@ import com.google.gson.JsonParser;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 
-import nl.utwente.atelier.api.utils.PemUtils;
 import nl.utwente.atelier.exceptions.CryptoException;
+import nl.utwente.atelier.pmd.server.Configuration;
 
 public class Authentication {
     private String userID;
+    private String atelierHost;
     private RSAPublicKey publicKey;
     private RSAPrivateKey privateKey;
     private HttpClient client;
@@ -27,12 +27,12 @@ public class Authentication {
     private String currentToken = null;
     private Instant currentTokenExp = null;
 
-    public Authentication(String userID, String publicKeyPath, String privateKeyPath, HttpClient client)
+    public Authentication(Configuration config, HttpClient client)
             throws IOException, CryptoException {
-        this.userID = userID;
-        var keyPair = PemUtils.getKeys(Path.of(publicKeyPath), Path.of(privateKeyPath), "RSA");
-        this.publicKey = (RSAPublicKey) keyPair.getPublic();
-        this.privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        this.userID = config.getAtelierPluginUserID();
+        this.atelierHost = config.getAtelierHost();
+        this.publicKey = (RSAPublicKey) config.getPublicKey();
+        this.privateKey = (RSAPrivateKey) config.getPrivateKey();
         this.client = client;
     }
 
@@ -49,7 +49,7 @@ public class Authentication {
         if (currentToken == null || currentTokenExp == null || currentTokenExp.isBefore(Instant.now().plusSeconds(15))) {
             System.out.println("Requesting new authentication token.");
             var token = issueToken();
-            var authRequest = new HttpGet("http://localhost:5000/api/auth/token");
+            var authRequest = new HttpGet(atelierHost + "/api/auth/token");
             authRequest.addHeader("Authorization", "Bearer " + token);
             try {
                 var res = client.execute(authRequest);

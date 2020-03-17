@@ -27,12 +27,14 @@ public class WebhookHandler {
     private HttpClient client;
     private Authentication auth;
     private String webhookSecret;
+    private String atelierHost;
     private PMDFileProcessor pmd = new PMDFileProcessor();
 
-    public WebhookHandler(HttpClient client, Authentication auth, String webhookSecret) {
+    public WebhookHandler(Configuration config, Authentication auth, HttpClient client) {
         this.client = client;
         this.auth = auth;
-        this.webhookSecret = webhookSecret;
+        this.webhookSecret = config.getWebhookSecret();
+        this.atelierHost = config.getAtelierHost();
     }
 
     private class InvalidWebhookRequest extends Throwable {
@@ -130,7 +132,7 @@ public class WebhookHandler {
 
             var token = auth.getCurrentToken();
             if (token != null) {
-                var fileRequest = new HttpGet("http://localhost:5000/api/file/" + fileID + "/body");
+                var fileRequest = new HttpGet(atelierHost + "/api/file/" + fileID + "/body");
                 fileRequest.addHeader("Authorization", "Bearer " + token);
 
                 var res = client.execute(fileRequest);

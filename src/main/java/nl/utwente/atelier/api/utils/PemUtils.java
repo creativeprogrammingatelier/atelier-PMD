@@ -17,6 +17,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PemUtils {
     private static final String PUBLIC_START = "-----BEGIN CERTIFICATE-----";
@@ -24,13 +25,18 @@ public class PemUtils {
     private static final String PRIVATE_START = "-----BEGIN PRIVATE KEY-----";
     private static final String PRIVATE_END = "-----END PRIVATE KEY-----";
 
-    private static KeyPair generateKeyPair(String algorithm) throws CryptoException {
+    public static KeyPair generateKeyPair(String algorithm) throws CryptoException {
         try {
             var gen = KeyPairGenerator.getInstance(algorithm);
             return gen.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             throw new CryptoException(e);
         }
+    }
+
+    public static void writeKeyPair(KeyPair keyPair, Path publicPath, Path privatePath) throws IOException {
+        writeKey(publicPath, PUBLIC_START, keyPair.getPublic(), PUBLIC_END);
+        writeKey(privatePath, PRIVATE_START, keyPair.getPrivate(), PRIVATE_END);
     }
 
     private static void writeKey(Path path, String start, Key key, String end) throws IOException {
@@ -48,16 +54,8 @@ public class PemUtils {
         Files.writeString(path, fileBuilder.toString());
     }
 
-    private static void writePublicKey(Path path, PublicKey key) throws IOException {
-        writeKey(path, PUBLIC_START, key, PUBLIC_END);
-    }
-
-    private static void writePrivateKey(Path path, PrivateKey key) throws IOException {
-        writeKey(path, PRIVATE_START, key, PRIVATE_END);
-    }
-
-    private static byte[] readKeyBytes(Path path, String start, String end) throws IOException {
-        var content = Files.lines(path)
+    private static byte[] readKeyBytes(Stream<String> lines, String start, String end) {
+        var content = lines
             .map(line -> line.trim())
             .collect(Collectors.joining())
             .replace(start, "")
@@ -66,38 +64,47 @@ public class PemUtils {
         return Base64.getDecoder().decode(content);
     }
 
-    private static PublicKey readPublicKey(Path path, KeyFactory kf) throws IOException, CryptoException {
-        var bytes = readKeyBytes(path, PUBLIC_START, PUBLIC_END);
+    private static byte[] readKeyBytes(String keyData, String start, String end) {
+        return readKeyBytes(keyData.lines(), start, end);
+    }
+
+    private static byte[] readKeyBytes(Path path, String start, String end) throws IOException {
+        return readKeyBytes(Files.lines(path), start, end);
+    }
+
+    private static PublicKey toPublicKey(byte[] keyBytes, KeyFactory kf) throws CryptoException {
         try {
-            return kf.generatePublic(new X509EncodedKeySpec(bytes));
+            return kf.generatePublic(new X509EncodedKeySpec(keyBytes));
         } catch (InvalidKeySpecException e) {
             throw new CryptoException(e);
         }
     }
-    private static PrivateKey readPrivateKey(Path path, KeyFactory kf) throws IOException, CryptoException {
-        var bytes = readKeyBytes(path, PRIVATE_START, PRIVATE_END);
+    private static PrivateKey toPrivateKey(byte[] keyBytes, KeyFactory kf) throws CryptoException {
         try {
-            return kf.generatePrivate(new PKCS8EncodedKeySpec(bytes));
+            return kf.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
         } catch (InvalidKeySpecException e) {
             throw new CryptoException(e);
         }
     }
 
-    public static KeyPair getKeys(Path publicPath, Path privatePath, String algorithm) throws CryptoException, IOException {
-        if (!Files.exists(publicPath) || !Files.exists(privatePath)) {
-            System.out.println("Generating new RSA key pair");
-            var keypair = generateKeyPair(algorithm);
-            writePublicKey(publicPath, keypair.getPublic());
-            writePrivateKey(privatePath, keypair.getPrivate());
-            return keypair;
-        } else {
-            System.out.println("Reading RSA keys from disk");
-            try {
-                KeyFactory kf = KeyFactory.getInstance(algorithm);
-                return new KeyPair(readPublicKey(publicPath, kf), readPrivateKey(privatePath, kf));
-            } catch (NoSuchAlgorithmException e) {
-                throw new CryptoException(e);
-            }
+    private static KeyPair getKeyPair(byte[] publicKey, byte[] privateKey, String algorithm) throws CryptoException {
+        try {
+            KeyFactory kf = KeyFactory.getInstance(algorithm);
+            return new KeyPair(toPublicKey(publicKey, kf), toPrivateKey(privateKey, kf));
+        } catch (NoSuchAlgorithmException e) {
+            throw new CryptoException(e);
         }
+    }
+
+    public static KeyPair getKeyPair(String publicKey, String privateKey, String algorithm) throws CryptoException {
+        var publicBytes = readKeyBytes(publicKey, PUBLIC_START, PUBLIC_END);
+        var privateBytes = readKeyBytes(privateKey, PRIVATE_START, PRIVATE_END);
+        return getKeyPair(publicBytes, privateBytes, algorithm);
+    }
+
+    public static KeyPair getKeyPair(Path publicPath, Path privatePath, String algorithm) throws CryptoException, IOException {
+        var publicBytes = readKeyBytes(publicPath, PUBLIC_START, PUBLIC_END);
+        var privateBytes = readKeyBytes(privatePath, PRIVATE_START, PRIVATE_END);
+        return getKeyPair(publicBytes, privateBytes, algorithm);
     }
 }
