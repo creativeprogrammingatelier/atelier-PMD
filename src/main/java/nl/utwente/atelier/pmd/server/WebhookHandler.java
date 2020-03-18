@@ -93,6 +93,7 @@ public class WebhookHandler {
                         handleFileSubmission(payload);
                         break;
                 }
+                response.setStatus(200);
             } catch (InvalidWebhookRequest e) {
                 System.out.println(e.getMessage());
                 response.setStatus(400);

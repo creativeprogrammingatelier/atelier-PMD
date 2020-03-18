@@ -16,9 +16,8 @@ public class PMDFileProcessor {
         try {
             var config = new PMDConfiguration();
             config.setMinimumPriority(RulePriority.LOW);
-            // TODO: get rulesets
-            config.setRuleSets("rulesets/ruleset.xml");
-            var ruleSetFactory = RulesetsFactoryUtils.createFactory(config);
+            config.setRuleSets("rulesets/processing.xml");
+            var ruleSetFactory = RulesetsFactoryUtils.getRulesetFactory(config);
 
             var ctx = new RuleContext();
             ctx.getReport().addListener(reportListener);
