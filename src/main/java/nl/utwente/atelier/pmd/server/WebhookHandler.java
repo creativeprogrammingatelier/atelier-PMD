@@ -1,6 +1,7 @@
 package nl.utwente.atelier.pmd.server;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -16,14 +17,14 @@ import nl.utwente.atelier.exceptions.PMDException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 
-import net.sourceforge.pmd.RuleViolation;
-import net.sourceforge.pmd.ThreadSafeReportListener;
-import net.sourceforge.pmd.stat.Metric;
+import net.sourceforge.pmd.renderers.XMLRenderer;
 import nl.utwente.atelier.api.Authentication;
 import nl.utwente.atelier.exceptions.CryptoException;
+import nl.utwente.atelier.pmd.AtelierPMDRenderer;
 import nl.utwente.atelier.pmd.PMDFileProcessor;
 
 public class WebhookHandler {
+    private Configuration config;
     private HttpClient client;
     private Authentication auth;
     private String webhookSecret;
@@ -31,6 +32,7 @@ public class WebhookHandler {
     private PMDFileProcessor pmd = new PMDFileProcessor();
 
     public WebhookHandler(Configuration config, Authentication auth, HttpClient client) {
+        this.config = config;
         this.client = client;
         this.auth = auth;
         this.webhookSecret = config.getWebhookSecret();
@@ -108,22 +110,6 @@ public class WebhookHandler {
         }
     }
 
-    private class CommentCreatingReportListener implements ThreadSafeReportListener {
-        private String fileID;
-
-        public CommentCreatingReportListener(String fileID) {
-            this.fileID = fileID;
-        }
-
-        @Override
-        public void ruleViolationAdded(RuleViolation ruleViolation) {
-            System.out.println("Violation in " + ruleViolation.getFilename() + ":" + ruleViolation.getBeginLine() + ": " + ruleViolation.getDescription());
-        }
-
-        @Override
-        public void metricAdded(Metric metric) { }
-    }
-
     private void handleFileSubmission(JsonObject file) throws CryptoException, IOException, PMDException {
         var fileName = file.get("name").getAsString();
         // We only handle processing files, so restrict to those
@@ -138,7 +124,8 @@ public class WebhookHandler {
 
                 var res = client.execute(fileRequest);
                 if (res.getStatusLine().getStatusCode() < 400) {
-                    pmd.ProcessFile(res.getEntity().getContent(), fileName, new CommentCreatingReportListener(fileID));
+                    var renderer = new AtelierPMDRenderer(fileID, auth, config, client);
+                    pmd.ProcessFile(fileName, res.getEntity().getContent(), renderer);
                 } else {
                     System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
                 }
