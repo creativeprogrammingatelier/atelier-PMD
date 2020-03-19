@@ -13,6 +13,6 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>Webhook</servlet-name>
-        <url-pattern>/atelier/hook</url-pattern>
+        <url-pattern>/hook</url-pattern>
     </servlet-mapping>
 </web-app>

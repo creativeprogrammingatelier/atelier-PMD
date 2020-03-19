@@ -28,6 +28,16 @@ This will use an environment variable called `ATELIER_HOST`. Similarly, you can 
 
 If you specify a file path for the `publicKey` and `privateKey` variables and these files don't exist yet, Atelier-PMD will generate the keys and store them in the given locations.
 
+## Running with Docker
+
+You can build the Docker image for Atelier-PMD using the `docker build` command:
+
+```sh
+docker build . -t atelier-pmd
+```
+
+The image exposes one volume in which you have to provide your configuration: `/atelier-pmd/config`. By default the configuration inside the container is called `production.json`, but you can override it by setting the `ATELIER_PMD_CONFIG` environment variable. The Tomcat server is exposed on port 8080, and the Atelier-PMD application can be reached under the `/atelier-pmd` path.
+
 ## Debugging in IntelliJ
 
 To debug Atelier-PMD in IntelliJ, you'll need to configure a Tomcat server in the *Run/Debug Configurations*. First create a new *Local Tomcat Server* configuration, and configure it to use your local Tomcat installation. Then you need to add the project to the server: go to the *Deployment* tab and add the `atelier-pmd:war exploded` artifact. Change the *Application context* to `/` to run the application at the root of the server. 
