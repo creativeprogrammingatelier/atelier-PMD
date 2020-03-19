@@ -24,13 +24,15 @@ import nl.utwente.processing.Processing;
 public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     private final String fileID;
+    private final String submissionID;
     private final Authentication auth;
     private final Configuration config;
     private final HttpClient client;
 
-    public AtelierPMDRenderer(String fileID, Authentication auth, Configuration config, HttpClient client) {
+    public AtelierPMDRenderer(String fileID, String submissionID, Authentication auth, Configuration config, HttpClient client) {
         super("Atelier-" + fileID, "Uploads comments directly to Atelier, on file " + fileID);
         this.fileID = fileID;
+        this.submissionID = submissionID;
         this.auth = auth;
         this.config = config;
         this.client = client;
@@ -70,6 +72,8 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             System.out.println("Found violation for rule " + violation.getRule().getName());
 
             var json = new JsonObject();
+
+            json.addProperty("submissionID", submissionID);
 
             // Add snippet to the comment
             json.addProperty("lineStart", Processing.mapLineNumber(violation.getBeginLine()));
@@ -115,6 +119,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             var json = new JsonObject();
 
+            json.addProperty("submissionID", submissionID);
             json.addProperty("visibilityState", "private");
             json.addProperty("commentBody", err.getMsg());
 

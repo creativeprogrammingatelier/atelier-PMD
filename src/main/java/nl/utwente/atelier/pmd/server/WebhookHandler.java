@@ -115,6 +115,7 @@ public class WebhookHandler {
         // We only handle processing files, so restrict to those
         if (fileName.endsWith(".pde")) {
             var fileID = file.get("ID").getAsString();
+            var submissionID = file.get("references").getAsJsonObject().get("submissionID").getAsString();
             System.out.printf("Processing %s (ID: %s)%n", fileName, fileID);
 
             var token = auth.getCurrentToken();
@@ -124,7 +125,7 @@ public class WebhookHandler {
 
                 var res = client.execute(fileRequest);
                 if (res.getStatusLine().getStatusCode() < 400) {
-                    var renderer = new AtelierPMDRenderer(fileID, auth, config, client);
+                    var renderer = new AtelierPMDRenderer(fileID, submissionID, auth, config, client);
                     pmd.ProcessFile(fileName, res.getEntity().getContent(), renderer);
                 } else {
                     System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
