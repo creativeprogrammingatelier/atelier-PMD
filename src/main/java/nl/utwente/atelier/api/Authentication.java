@@ -27,8 +27,7 @@ public class Authentication {
     private String currentToken = null;
     private Instant currentTokenExp = null;
 
-    public Authentication(Configuration config, HttpClient client)
-            throws IOException, CryptoException {
+    public Authentication(Configuration config, HttpClient client) {
         this.userID = config.getAtelierPluginUserID();
         this.atelierHost = config.getAtelierHost();
         this.publicKey = (RSAPublicKey) config.getPublicKey();
@@ -65,8 +64,11 @@ public class Authentication {
                 }
             } catch (NullPointerException e) {
                 System.out.println("Got null when trying to read token.");
+            } finally {
+                authRequest.releaseConnection();
             }
         }
+        System.out.println("Returning token: " + currentToken);
         return currentToken;
     }
 }

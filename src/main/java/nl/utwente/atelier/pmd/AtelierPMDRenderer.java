@@ -52,6 +52,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     @Override
     public void start() throws IOException {
+        System.out.println("Starting renderer for " + fileID);
         super.start();
         this.setWriter(new NoWriter());
     }
@@ -65,6 +66,8 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
     public void renderFileViolations(Iterator<RuleViolation> violations) throws IOException {
         while (violations.hasNext()) {
             var violation = violations.next();
+
+            System.out.println("Found violation for rule " + violation.getRule().getName());
 
             var json = new JsonObject();
 
@@ -97,6 +100,8 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
                 } else {
                     System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
                 }
+
+                commentReq.releaseConnection();
             } catch (CryptoException | NullPointerException e) {
                 e.printStackTrace();
             }
@@ -106,6 +111,8 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
     @Override
     public void end() throws IOException {
         for (var err : errors) {
+            System.out.println("Got error: " + err.getMsg());
+
             var json = new JsonObject();
 
             json.addProperty("visibilityState", "private");
@@ -124,6 +131,8 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
                 } else {
                     System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
                 }
+
+                commentReq.releaseConnection();
             } catch (CryptoException | NullPointerException e) {
                 e.printStackTrace();
             }

@@ -129,6 +129,8 @@ public class WebhookHandler {
                 } else {
                     System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
                 }
+
+                fileRequest.releaseConnection();
             }
         }
     }
