@@ -115,8 +115,9 @@ public class WebhookHandler {
 
             var res = api.getFile(fileID);
             if (res.getStatusLine().getStatusCode() < 400) {
-                var renderer = new AtelierPMDRenderer(fileID, submissionID, api);
-                pmd.ProcessFile(fileName, res.getEntity().getContent(), renderer);
+                var fileContent = new String(res.getEntity().getContent().readAllBytes());
+                var renderer = new AtelierPMDRenderer(fileID, submissionID, fileContent, api);
+                pmd.ProcessFile(fileName, fileContent, renderer);
             } else {
                 System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
             }

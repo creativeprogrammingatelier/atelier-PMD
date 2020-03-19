@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -26,12 +27,14 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     private final String fileID;
     private final String submissionID;
+    private final String fileContent;
     private final AtelierAPI api;
 
-    public AtelierPMDRenderer(String fileID, String submissionID, AtelierAPI api) {
+    public AtelierPMDRenderer(String fileID, String submissionID, String fileContent, AtelierAPI api) {
         super("Atelier-" + fileID, "Uploads comments directly to Atelier, on file " + fileID);
         this.fileID = fileID;
         this.submissionID = submissionID;
+        this.fileContent = fileContent;
         this.api = api;
     }
 
@@ -68,15 +71,28 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             System.out.println("Found violation for rule " + violation.getRule().getName());
 
+            var lineStart = Processing.mapLineNumber(violation.getBeginLine());
+            var charStart = violation.getBeginColumn();
+            var lineEnd = Processing.mapLineNumber(violation.getEndLine());
+            var charEnd = violation.getEndColumn();
+
+            if (lineStart == lineEnd && charStart == charEnd) {
+                var line = fileContent.lines().collect(Collectors.toList()).get(lineStart - 1);
+                charStart = line.indexOf(line.trim());
+                charEnd = line.length();
+            } else {
+                charStart = Math.max(0, charStart - 1);
+            }
+
             var json = new JsonObject();
 
             json.addProperty("submissionID", submissionID);
 
-            // Add snippet to the comment
-            json.addProperty("lineStart", Processing.mapLineNumber(violation.getBeginLine()));
-            json.addProperty("charStart", violation.getBeginColumn());
-            json.addProperty("lineEnd", Processing.mapLineNumber(violation.getEndLine()));
-            json.addProperty("charEnd", violation.getEndColumn());
+            // Add snippet to the comment, Atelier uses zero-indexing
+            json.addProperty("lineStart", lineStart - 1);
+            json.addProperty("charStart", charStart);
+            json.addProperty("lineEnd", lineEnd - 1);
+            json.addProperty("charEnd", charEnd);
             // TODO: add snippet body and context
             json.addProperty("snippetBody", "");
             json.addProperty("contextBefore", "");

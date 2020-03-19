@@ -16,9 +16,8 @@ public class PMDFileProcessor {
 
     // PMD Docs: https://pmd.github.io/pmd-6.22.0/pmd_userdocs_tools_java_api.html
 
-    public void ProcessFile(String fileName, InputStream file, Renderer renderer) throws PMDException, IOException {
-        var processingCode = new String(file.readAllBytes());
-        var javaCode = Processing.toJava(processingCode);
+    public void ProcessFile(String fileName, String fileContent, Renderer renderer) throws PMDException, IOException {
+        var javaCode = Processing.toJava(fileContent);
         var javaReader = new StringReader(javaCode);
 
         try {
