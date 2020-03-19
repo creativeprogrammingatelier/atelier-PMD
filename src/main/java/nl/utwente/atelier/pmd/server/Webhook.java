@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 
 import javax.servlet.http.*;
 
+import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.api.Authentication;
 import nl.utwente.atelier.exceptions.ConfigurationException;
 import nl.utwente.atelier.exceptions.CryptoException;
@@ -18,7 +19,8 @@ public class Webhook extends HttpServlet {
         var httpClient = HttpClients.createDefault();
         var config = Configuration.readFromFile();
         var auth = new Authentication(config, httpClient);
-        this.handler = new WebhookHandler(config, auth, httpClient);
+        var api = new AtelierAPI(config, auth, httpClient);
+        this.handler = new WebhookHandler(config, api);
         System.out.println("Webhook started.");
     }
 

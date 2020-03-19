@@ -8,6 +8,7 @@ import java.util.Iterator;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import nl.utwente.atelier.api.AtelierAPI;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -25,17 +26,13 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     private final String fileID;
     private final String submissionID;
-    private final Authentication auth;
-    private final Configuration config;
-    private final HttpClient client;
+    private final AtelierAPI api;
 
-    public AtelierPMDRenderer(String fileID, String submissionID, Authentication auth, Configuration config, HttpClient client) {
+    public AtelierPMDRenderer(String fileID, String submissionID, AtelierAPI api) {
         super("Atelier-" + fileID, "Uploads comments directly to Atelier, on file " + fileID);
         this.fileID = fileID;
         this.submissionID = submissionID;
-        this.auth = auth;
-        this.config = config;
-        this.client = client;
+        this.api = api;
     }
 
     private class NoWriter extends Writer {
@@ -92,11 +89,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             json.addProperty("commentBody", violation.getDescription());
 
             try {
-                var commentReq = new HttpPost(config.getAtelierHost() + "/api/commentThread/file/" + fileID);
-                commentReq.addHeader("Authorization", "Bearer " + auth.getCurrentToken());
-                commentReq.setEntity(new StringEntity(json.toString()));
-
-                var res = client.execute(commentReq);
+                var res = api.postComment(fileID, json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
@@ -104,8 +97,6 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
                 } else {
                     System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
                 }
-
-                commentReq.releaseConnection();
             } catch (CryptoException | NullPointerException e) {
                 e.printStackTrace();
             }
@@ -124,11 +115,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             json.addProperty("commentBody", err.getMsg());
 
             try {
-                var commentReq = new HttpPost(config.getAtelierHost() + "/api/commentThread/file/" + fileID);
-                commentReq.addHeader("Authorization", "Bearer " + auth.getCurrentToken());
-                commentReq.setEntity(new StringEntity(json.toString()));
-
-                var res = client.execute(commentReq);
+                var res = api.postComment(fileID, json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
@@ -136,8 +123,6 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
                 } else {
                     System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
                 }
-
-                commentReq.releaseConnection();
             } catch (CryptoException | NullPointerException e) {
                 e.printStackTrace();
             }

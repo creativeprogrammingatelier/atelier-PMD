@@ -13,6 +13,7 @@ import javax.servlet.http.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.exceptions.PMDException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -24,19 +25,13 @@ import nl.utwente.atelier.pmd.AtelierPMDRenderer;
 import nl.utwente.atelier.pmd.PMDFileProcessor;
 
 public class WebhookHandler {
-    private Configuration config;
-    private HttpClient client;
-    private Authentication auth;
-    private String webhookSecret;
-    private String atelierHost;
-    private PMDFileProcessor pmd = new PMDFileProcessor();
+    private final String webhookSecret;
+    private final AtelierAPI api;
+    private final PMDFileProcessor pmd = new PMDFileProcessor();
 
-    public WebhookHandler(Configuration config, Authentication auth, HttpClient client) {
-        this.config = config;
-        this.client = client;
-        this.auth = auth;
+    public WebhookHandler(Configuration config, AtelierAPI api) {
         this.webhookSecret = config.getWebhookSecret();
-        this.atelierHost = config.getAtelierHost();
+        this.api = api;
     }
 
     private class InvalidWebhookRequest extends Throwable {
@@ -118,20 +113,12 @@ public class WebhookHandler {
             var submissionID = file.get("references").getAsJsonObject().get("submissionID").getAsString();
             System.out.printf("Processing %s (ID: %s)%n", fileName, fileID);
 
-            var token = auth.getCurrentToken();
-            if (token != null) {
-                var fileRequest = new HttpGet(atelierHost + "/api/file/" + fileID + "/body");
-                fileRequest.addHeader("Authorization", "Bearer " + token);
-
-                var res = client.execute(fileRequest);
-                if (res.getStatusLine().getStatusCode() < 400) {
-                    var renderer = new AtelierPMDRenderer(fileID, submissionID, auth, config, client);
-                    pmd.ProcessFile(fileName, res.getEntity().getContent(), renderer);
-                } else {
-                    System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
-                }
-
-                fileRequest.releaseConnection();
+            var res = api.getFile(fileID);
+            if (res.getStatusLine().getStatusCode() < 400) {
+                var renderer = new AtelierPMDRenderer(fileID, submissionID, api);
+                pmd.ProcessFile(fileName, res.getEntity().getContent(), renderer);
+            } else {
+                System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
             }
         }
     }
