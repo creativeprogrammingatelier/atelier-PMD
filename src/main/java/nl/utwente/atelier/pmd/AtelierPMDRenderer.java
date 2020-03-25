@@ -89,10 +89,14 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             // Add snippet to the comment, Atelier uses zero-indexing
             var snippet = new JsonObject();
-            snippet.addProperty("lineStart", lineStart - 1);
-            snippet.addProperty("charStart", charStart);
-            snippet.addProperty("lineEnd", lineEnd - 1);
-            snippet.addProperty("charEnd", charEnd);
+            var start = new JsonObject();
+            start.addProperty("line", lineStart - 1);
+            start.addProperty("character", charStart);
+            snippet.add("start", start);
+            var end = new JsonObject();
+            end.addProperty("line", lineEnd - 1);
+            end.addProperty("character", charEnd);
+            snippet.add("end", end);
             json.add("snippet", snippet);
 
             // Set the default visibility to private
