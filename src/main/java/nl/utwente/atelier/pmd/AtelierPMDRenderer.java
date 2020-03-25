@@ -103,7 +103,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             json.addProperty("visibilityState", "private");
 
             // Set the text of the comment
-            json.addProperty("commentBody", violation.getDescription());
+            json.addProperty("comment", violation.getDescription());
 
             try {
                 var res = api.postComment(fileID, json);
