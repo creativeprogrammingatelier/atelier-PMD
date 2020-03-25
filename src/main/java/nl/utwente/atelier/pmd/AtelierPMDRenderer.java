@@ -100,7 +100,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             json.add("snippet", snippet);
 
             // Set the default visibility to private
-            json.addProperty("visibilityState", "private");
+            json.addProperty("visibility", "private");
 
             // Set the text of the comment
             json.addProperty("comment", violation.getDescription());
