@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Collections;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -15,13 +16,10 @@ import com.google.gson.JsonParser;
 
 import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.exceptions.PMDException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 
-import net.sourceforge.pmd.renderers.XMLRenderer;
-import nl.utwente.atelier.api.Authentication;
 import nl.utwente.atelier.exceptions.CryptoException;
 import nl.utwente.atelier.pmd.AtelierPMDRenderer;
+import nl.utwente.atelier.pmd.PMDFile;
 import nl.utwente.atelier.pmd.PMDFileProcessor;
 
 public class WebhookHandler {
@@ -117,7 +115,7 @@ public class WebhookHandler {
             if (res.getStatusLine().getStatusCode() < 400) {
                 var fileContent = new String(res.getEntity().getContent().readAllBytes());
                 var renderer = new AtelierPMDRenderer(fileID, submissionID, fileContent, api);
-                pmd.ProcessFile(fileName, fileContent, renderer);
+                pmd.ProcessFile(Collections.singletonList(new PMDFile(fileID, fileContent)), renderer);
             } else {
                 System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
             }
