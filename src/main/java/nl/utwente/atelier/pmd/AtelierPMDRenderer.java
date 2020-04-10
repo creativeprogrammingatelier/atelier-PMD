@@ -4,37 +4,29 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import nl.utwente.atelier.api.AtelierAPI;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-
 import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
 
-import nl.utwente.atelier.api.Authentication;
+import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.exceptions.CryptoException;
-import nl.utwente.atelier.pmd.server.Configuration;
 import nl.utwente.processing.Processing;
 
 public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
-    private final String fileID;
     private final String submissionID;
-    private final String fileContent;
+    private final List<PMDFile> files;
     private final AtelierAPI api;
 
-    public AtelierPMDRenderer(String fileID, String submissionID, String fileContent, AtelierAPI api) {
-        super("Atelier-" + fileID, "Uploads comments directly to Atelier, on file " + fileID);
-        this.fileID = fileID;
+    public AtelierPMDRenderer(String submissionID, List<PMDFile> files, AtelierAPI api) {
+        super("Atelier-" + submissionID, "Uploads comments directly to Atelier, on submission " + submissionID);
         this.submissionID = submissionID;
-        this.fileContent = fileContent;
+        this.files = files;
         this.api = api;
     }
 
@@ -54,7 +46,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     @Override
     public void start() throws IOException {
-        System.out.println("Starting renderer for " + fileID);
+        System.out.println("Starting renderer for " + submissionID);
         super.start();
         this.setWriter(new NoWriter());
     }
@@ -71,13 +63,17 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             System.out.println("Found violation for rule " + violation.getRule().getName());
 
+            var file = files.stream()
+                .filter(f -> f.getName().equals(violation.getFilename()))
+                .findAny().get();
+
             var lineStart = Processing.mapLineNumber(violation.getBeginLine());
             var charStart = violation.getBeginColumn();
             var lineEnd = Processing.mapLineNumber(violation.getEndLine());
             var charEnd = violation.getEndColumn();
 
             if (lineStart == lineEnd && charStart == charEnd) {
-                var line = fileContent.lines().collect(Collectors.toList()).get(lineStart - 1);
+                var line = file.getContent().lines().collect(Collectors.toList()).get(lineStart - 1);
                 charStart = line.indexOf(line.trim());
                 charEnd = line.length();
             } else {
@@ -106,7 +102,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             json.addProperty("comment", violation.getDescription());
 
             try {
-                var res = api.postComment(fileID, json);
+                var res = api.postComment(file.getId(), json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
@@ -125,6 +121,10 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
         for (var err : errors) {
             System.out.println("Got error: " + err.getMsg());
 
+            var file = files.stream()
+                .filter(f -> f.getName().equals(err.getFile()))
+                .findAny().get();
+
             var json = new JsonObject();
 
             json.addProperty("submissionID", submissionID);
@@ -132,7 +132,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             json.addProperty("commentBody", err.getMsg());
 
             try {
-                var res = api.postComment(fileID, json);
+                var res = api.postComment(file.getId(), json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
@@ -145,7 +145,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             }
         }
 
-        System.out.println("Ending renderer for " + fileID);
+        System.out.println("Ending renderer for " + submissionID);
 
         this.getWriter().close();
     }

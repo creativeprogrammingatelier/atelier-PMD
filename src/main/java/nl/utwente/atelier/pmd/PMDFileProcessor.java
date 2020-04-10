@@ -29,7 +29,7 @@ public class PMDFileProcessor {
 
             List<DataSource> datasources = files.stream().map(file -> {
                 var java = Processing.toJava(file.getContent());
-                return new ReaderDataSource(new StringReader(java), file.getId());
+                return new ReaderDataSource(new StringReader(java), file.getName());
             }).collect(Collectors.toList());
 
             try {   
