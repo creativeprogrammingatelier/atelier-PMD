@@ -23,6 +23,7 @@ import nl.utwente.atelier.pmd.AtelierPMDRenderer;
 import nl.utwente.atelier.pmd.PMDFile;
 import nl.utwente.atelier.pmd.PMDFileProcessor;
 
+/** Handler for Webhook requests. It checks if the request is valid and handles supported events. */
 public class WebhookHandler {
     private final String webhookSecret;
     private final AtelierAPI api;
@@ -33,12 +34,14 @@ public class WebhookHandler {
         this.api = api;
     }
 
+    /** Indicates that the request is not valid due to the given reason */
     private class InvalidWebhookRequest extends Throwable {
         public InvalidWebhookRequest(String reason) {
             super("Invalid request. " + reason);
         }
     }
 
+    /** Check that the request has the correct User-Agent header */
     private void checkUserAgent(HttpServletRequest request) throws InvalidWebhookRequest {
         var userAgent = request.getHeader("User-Agent");
         if (userAgent == null || !userAgent.equals("Atelier")) {
@@ -46,6 +49,7 @@ public class WebhookHandler {
         }
     }
 
+    /** Check that the request has the correct signature, corresponding to the WebhookSecret */
     private void checkSignature(HttpServletRequest request, byte[] body) throws InvalidWebhookRequest, CryptoException {
         var signature = request.getHeader("X-Atelier-Signature");
         if (signature == null) {
@@ -69,6 +73,7 @@ public class WebhookHandler {
         }
     }
 
+    /** Handle an incoming Webhook request */
     public void handleWebhook(HttpServletRequest request, HttpServletResponse response) {
         System.out.println("Received new webhook request.");
         try {
@@ -107,6 +112,7 @@ public class WebhookHandler {
         }
     }
 
+    /** Handle events of type 'submission' */
     private void handleSubmission(JsonObject submission) throws CryptoException, IOException, PMDException {
         var submissionID = submission.get("ID").getAsString();
         System.out.printf("Handling submission %s%n", submissionID);
@@ -133,12 +139,13 @@ public class WebhookHandler {
             })
             .collect(Collectors.toList());
             var renderer = new AtelierPMDRenderer(submissionID, files, api);
-            pmd.ProcessFile(files, renderer);
+            pmd.ProcessFiles(files, renderer);
         } catch (RuntimeException ex) {
 
         }
     }
 
+    /** Handle events of type 'submission.file' */
     private void handleFileSubmission(JsonObject file) throws CryptoException, IOException, PMDException {
         var fileName = file.get("name").getAsString();
         // We only handle processing files, so restrict to those
@@ -152,7 +159,7 @@ public class WebhookHandler {
                 var fileContent = new String(res.getEntity().getContent().readAllBytes());
                 var files = Collections.singletonList(new PMDFile(fileID, fileName, fileContent));
                 var renderer = new AtelierPMDRenderer(submissionID, files, api);
-                pmd.ProcessFile(files, renderer);
+                pmd.ProcessFiles(files, renderer);
             } else {
                 System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
             }

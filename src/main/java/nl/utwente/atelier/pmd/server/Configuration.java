@@ -16,6 +16,7 @@ import nl.utwente.atelier.api.utils.PemUtils;
 import nl.utwente.atelier.exceptions.ConfigurationException;
 import nl.utwente.atelier.exceptions.CryptoException;
 
+/** Configuration for Atelier-PMD, contains all environment-dependend settings */
 public class Configuration {
     private static final String ENV = "ENV::";
     private static final String FILE = "FILE::";
@@ -27,6 +28,14 @@ public class Configuration {
     private final PublicKey publicKey;
     private final PrivateKey privateKey;
 
+    /**
+     * Create a new configuration
+     * @param atelierHost the URL for the connected Atelier instance, without a trailing /
+     * @param atelierPluginUserID the userID of the plugin within Atelier
+     * @param webhookSecret a secret that Atelier uses to sign the webhook requests
+     * @param publicKey the public key of this application, used for initial authentication
+     * @param privateKey the private key corresponding with the public key
+     */
     private Configuration(String atelierHost, String atelierPluginUserID, String webhookSecret, PublicKey publicKey,
             PrivateKey privateKey) {
         this.atelierHost = atelierHost;
@@ -67,6 +76,10 @@ public class Configuration {
         return getProp(value, field);
     }
 
+    /** 
+     * Read the configuration JSON file from the file location specified by the 
+     * ATELIER_PMD_CONFIG environment variable 
+     */
     public static Configuration readFromFile()
             throws ConfigurationException, CryptoException, IOException, URISyntaxException {
         var env = System.getenv("ATELIER_PMD_CONFIG");
@@ -76,6 +89,7 @@ public class Configuration {
         return readFromFile(Path.of(env));
     }
 
+    /** Read the configuration JSON file from the specified file location */
     public static Configuration readFromFile(Path file) throws ConfigurationException, CryptoException, IOException {
         var config = JsonParser.parseReader(new FileReader(file.toFile())).getAsJsonObject();
 
@@ -105,22 +119,27 @@ public class Configuration {
         );
     }
 
+    /** The URL of the connected Atelier instance */
     public String getAtelierHost() {
         return atelierHost;
     }
 
+    /** The user ID of the registered plugin in Atelier */
     public String getAtelierPluginUserID() {
         return atelierPluginUserID;
     }
 
+    /** The secret Atelier uses to sign Webhook requests */
     public String getWebhookSecret() {
         return webhookSecret;
     }
 
+    /** The public key of this application, used for initial authentication */
     public PublicKey getPublicKey() {
         return publicKey;
     }
 
+    /** The private key corresponding to our public key */
     public PrivateKey getPrivateKey() {
         return privateKey;
     }

@@ -1,5 +1,6 @@
 package nl.utwente.atelier.pmd;
 
+/** Helper class to store information about a file */
 public class PMDFile {
     private final String id;
     private final String name;

@@ -14,11 +14,13 @@ import net.sourceforge.pmd.renderers.Renderer;
 import nl.utwente.atelier.exceptions.PMDException;
 import nl.utwente.processing.Processing;
 
+/** Wrapper around PMD that allows for easy processing of projects */
 public class PMDFileProcessor {
 
     // PMD Docs: https://pmd.github.io/pmd-6.22.0/pmd_userdocs_tools_java_api.html
 
-    public void ProcessFile(List<PMDFile> files, Renderer renderer) throws PMDException, IOException {
+    /** Run a list of files through PMD, sending the results to the provided renderer */
+    public void ProcessFiles(List<PMDFile> files, Renderer renderer) throws PMDException, IOException {
         try {
             var config = new PMDConfiguration();
             config.setMinimumPriority(RulePriority.LOW);

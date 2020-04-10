@@ -17,6 +17,7 @@ import org.apache.http.client.methods.HttpGet;
 import nl.utwente.atelier.exceptions.CryptoException;
 import nl.utwente.atelier.pmd.server.Configuration;
 
+/** Helper class for dealing with authentication for the Atelier API */
 public class Authentication {
     private String userID;
     private String atelierHost;
@@ -35,6 +36,7 @@ public class Authentication {
         this.client = client;
     }
 
+    /** Create a JWT token using our own private key for use in the authentication flow */
     private String issueToken() throws CryptoException {
         try {
             Algorithm algorithm = Algorithm.RSA256(publicKey, privateKey);
@@ -44,6 +46,11 @@ public class Authentication {
         }
     }
 
+    /** 
+     * Get a token that can be used for authentication with API requests. If we don't have a
+     * stored token, or the stored token has (or will soon be) expired, request a new one and
+     * return it.
+     */
     public synchronized String getCurrentToken() throws CryptoException, IOException {
         if (currentToken == null || currentTokenExp == null || currentTokenExp.isBefore(Instant.now().plusSeconds(15))) {
             System.out.println("Requesting new authentication token.");
@@ -68,7 +75,6 @@ public class Authentication {
                 authRequest.releaseConnection();
             }
         }
-        System.out.println("Returning token: " + currentToken);
         return currentToken;
     }
 }

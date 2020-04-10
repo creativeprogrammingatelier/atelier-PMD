@@ -19,12 +19,14 @@ import java.util.Base64;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/** Helper class to deal with public/private keys and certificates */
 public class PemUtils {
     private static final String PUBLIC_START = "-----BEGIN CERTIFICATE-----";
     private static final String PUBLIC_END = "-----END CERTIFICATE-----";
     private static final String PRIVATE_START = "-----BEGIN PRIVATE KEY-----";
     private static final String PRIVATE_END = "-----END PRIVATE KEY-----";
 
+    /** Generate a new KeyPair, where algorithm is one of the valid algorithms for Java's KeyPairGenerator */
     public static KeyPair generateKeyPair(String algorithm) throws CryptoException {
         try {
             var gen = KeyPairGenerator.getInstance(algorithm);
@@ -34,6 +36,7 @@ public class PemUtils {
         }
     }
 
+    /** Write a KeyPair out to disk, on the specified file paths */
     public static void writeKeyPair(KeyPair keyPair, Path publicPath, Path privatePath) throws IOException {
         writeKey(publicPath, PUBLIC_START, keyPair.getPublic(), PUBLIC_END);
         writeKey(privatePath, PRIVATE_START, keyPair.getPrivate(), PRIVATE_END);
@@ -87,6 +90,7 @@ public class PemUtils {
         }
     }
 
+    /** Create a KeyPair from the binary contents of the keys */
     private static KeyPair getKeyPair(byte[] publicKey, byte[] privateKey, String algorithm) throws CryptoException {
         try {
             KeyFactory kf = KeyFactory.getInstance(algorithm);
@@ -96,12 +100,14 @@ public class PemUtils {
         }
     }
 
+    /** Create a KeyPair from the string content of keyfiles */
     public static KeyPair getKeyPair(String publicKey, String privateKey, String algorithm) throws CryptoException {
         var publicBytes = readKeyBytes(publicKey, PUBLIC_START, PUBLIC_END);
         var privateBytes = readKeyBytes(privateKey, PRIVATE_START, PRIVATE_END);
         return getKeyPair(publicBytes, privateBytes, algorithm);
     }
 
+    /** Create a KeyPair from two keyfiles */
     public static KeyPair getKeyPair(Path publicPath, Path privatePath, String algorithm) throws CryptoException, IOException {
         var publicBytes = readKeyBytes(publicPath, PUBLIC_START, PUBLIC_END);
         var privateBytes = readKeyBytes(privatePath, PRIVATE_START, PRIVATE_END);

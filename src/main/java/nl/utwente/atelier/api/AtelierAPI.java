@@ -12,6 +12,7 @@ import org.apache.http.entity.StringEntity;
 
 import java.io.IOException;
 
+/** Helper class to make API requests to Atelier */
 public class AtelierAPI {
     private final Configuration config;
     private final Authentication auth;
@@ -30,11 +31,13 @@ public class AtelierAPI {
         return res;
     }
 
+    /** Get the file body for a given fileID */
     public HttpResponse getFile(String fileID) throws IOException, CryptoException {
         var fileRequest = new HttpGet(config.getAtelierHost() + "/api/file/" + fileID + "/body");
         return makeAuthenticatedRequest(fileRequest);
     }
 
+    /** Create a new comment thread on a file */
     public HttpResponse postComment(String fileID, JsonObject json) throws IOException, CryptoException {
         var commentReq = new HttpPost(config.getAtelierHost() + "/api/commentThread/file/" + fileID);
         commentReq.setEntity(new StringEntity(json.toString()));

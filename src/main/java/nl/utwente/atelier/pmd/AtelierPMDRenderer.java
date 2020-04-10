@@ -17,12 +17,19 @@ import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.exceptions.CryptoException;
 import nl.utwente.processing.Processing;
 
+/** PMD violation and error renderer that submits comments to Atelier */
 public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     private final String submissionID;
     private final List<PMDFile> files;
     private final AtelierAPI api;
 
+    /**
+     * Create a new renderer for submitting comments to Atelier
+     * @param submissionID the ID for the submission that is getting checked
+     * @param files list of files that PMD is running through
+     * @param api helper to create Atelier API requests
+     */
     public AtelierPMDRenderer(String submissionID, List<PMDFile> files, AtelierAPI api) {
         super("Atelier-" + submissionID, "Uploads comments directly to Atelier, on submission " + submissionID);
         this.submissionID = submissionID;
@@ -30,6 +37,9 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
         this.api = api;
     }
 
+    // Renderers are required to provide a writer, but we don't want to write
+    // anything to a write, so we use the NoWriter:
+    /** Writer that does absolutely nothing */
     private class NoWriter extends Writer {
         @Override
         public void write(char[] cbuf, int off, int len) throws IOException {

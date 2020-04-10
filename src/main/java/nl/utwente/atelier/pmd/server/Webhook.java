@@ -12,6 +12,7 @@ import nl.utwente.atelier.exceptions.CryptoException;
 
 import org.apache.http.impl.client.HttpClients;
 
+/** Servlet for Webhook requests, entrypoint of the application */
 public class Webhook extends HttpServlet {
     private WebhookHandler handler;
 
