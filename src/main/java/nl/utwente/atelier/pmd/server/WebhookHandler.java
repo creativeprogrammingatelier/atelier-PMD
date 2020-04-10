@@ -1,11 +1,12 @@
 package nl.utwente.atelier.pmd.server;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -84,6 +85,9 @@ public class WebhookHandler {
                 var event = json.getAsJsonObject().get("event").getAsString();
                 var payload = json.getAsJsonObject().get("payload").getAsJsonObject();
                 switch (event) {
+                    case "submission":
+                        handleSubmission(payload);
+                        break;
                     case "submission.file":
                         handleFileSubmission(payload);
                         break;
@@ -100,6 +104,38 @@ public class WebhookHandler {
         } catch (IOException | CryptoException | PMDException e) {
             response.setStatus(500);
             e.printStackTrace();
+        }
+    }
+
+    private void handleSubmission(JsonObject submission) throws CryptoException, IOException, PMDException {
+        var submissionID = submission.get("ID").getAsString();
+        System.out.printf("Handling submission %s%n", submissionID);
+        try {
+            var files = StreamSupport.stream(submission.get("files").getAsJsonArray().spliterator(), true)
+            .map(file -> file.getAsJsonObject())
+            .filter(file -> file.get("name").getAsString().endsWith(".pde"))
+            .map(file -> {
+                try {
+                    var fileName = file.get("name").getAsString();
+                    var fileID = file.get("ID").getAsString();
+                    var res = api.getFile(fileID);
+                    if (res.getStatusLine().getStatusCode() < 400) {
+                        var fileContent = new String(res.getEntity().getContent().readAllBytes());
+                        return new PMDFile(fileID, fileName, fileContent);
+                    } else {
+                        var message = String.format("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
+                        System.out.printf(message);
+                        throw new IOException(message);
+                    }
+                } catch (IOException | CryptoException ex) {
+                    throw new RuntimeException(ex);
+                }
+            })
+            .collect(Collectors.toList());
+            var renderer = new AtelierPMDRenderer(submissionID, files, api);
+            pmd.ProcessFile(files, renderer);
+        } catch (RuntimeException ex) {
+
         }
     }
 
