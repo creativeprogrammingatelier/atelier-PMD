@@ -2,6 +2,8 @@
 
 This project integrates a version of [PMD](https://pmd.github.io/) designed to work with the Processing language into the [Atelier](https://github.com/creativeprogrammingatelier/atelier) system. The [PMD rules for Processing](https://github.com/ZITA4PDE/ProcessingPMD) used in this project are developed by Remco de Man and described in [this paper](https://doi.org/10.5220/0006701704200431). The conversion from Processing code to the Java code checked by PMD is written by Tim Blok for his [Zita](https://github.com/swordiemen/zita/) project, which is described in [this paper](http://purl.utwente.nl/essays/77948).
 
+Atelier-PMD provides two modes of operation: it accepts full projects, or single files. In normal use the full project mode is recommended, the single file mode is there as an historical artifact. The mode of operation is chosen when configuring the plugin in Atelier, where you can choose the webhooks to subscribe to. Choosing `submission` will send projects to Atelier-PMD as a single project, whereas `submission.file` sends all the files separately. Please note that enabling both webhooks results in a duplication of all comments made by Atelier-PMD.
+
 ## Configuration
 
 This project exposes a single API endpoint, namely a webhook to integrate with the Atelier system. To use the system, it needs to know about your instance of Atelier and this application has to be registered with Atelier as a plugin.
