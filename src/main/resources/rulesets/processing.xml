@@ -87,7 +87,7 @@
 	</rule>
 
 	<rule name="StatelessClassRule"
-		  message="Class {0} does not declare any fields. The class should be removed by moving methods to the global scope."
+		  message="Class {0} does not declare any fields. Decide if any of the global variables belong here, or alternatively if these methods belong to some other class."
 		  class="nl.utwente.processing.pmdrules.StatelessClassRule">
 		<description>
 			Stateless classes are not allowed. Utility classes with only methods should define their methods in the
