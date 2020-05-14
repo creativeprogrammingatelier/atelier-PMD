@@ -1,43 +1,44 @@
 <?xml version="1.0"?>
-<ruleset name="Processing Ruleset"
-		 xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
-	<description>
-		Ruleset with custom rules specific to Processing code.
-		Developed as part of the "The Smell of Poor Design" bachelor research project.
-	</description>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         name="Processing Ruleset"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+    <description>
+        Ruleset with custom rules specific to Processing code.
+        Developed as part of the "The Smell of Poor Design" bachelor research project.
+    </description>
+    <!-- Commented out sice it does currently not work
 
-	<rule name="DecentralizedDrawingRule"
-		  message="Do not use drawing method {0} in method {1}, {1} is called outside of the draw sequence and can therefore not contain drawing methods."
-		  class="nl.utwente.processing.pmdrules.DecentralizedDrawingRule">
-		<description>
-			Methods that draw on screen should only be called from drawing methods: methods that are (indirectly) called
-			solely by the draw method.
-		</description>
-		<priority>3</priority>
-		<example>
-			<![CDATA[
-				float x, y, x2, y2;
+     <rule name="DecentralizedDrawingRule"
+           message="Do not use drawing method {0} in method {1}, {1} is called outside of the draw sequence and can therefore not contain drawing methods."
+           class="nl.utwente.processing.pmdrules.DecentralizedDrawingRule">
+         <description>
+             Methods that draw on screen should only be called from drawing methods: methods that are (indirectly) called
+             solely by the draw method.
+         </description>
+         <priority>3</priority>
+         <example>
+             <![CDATA[
+                 float x, y, x2, y2;
 
-				void setup() {
-					//Wrong: Do not use drawing functions from non-drawing methods.
-					rect(x, y, x2, y2);
-				}
-			]]>
-		</example>
-	</rule>
-
-	<rule name="DrawingStateChangeRule"
-		  message="Do not change global variable {0} from method {1}, {1} is part of the draw sequence."
-		  class="nl.utwente.processing.pmdrules.DrawingStateChangeRule">
-		<description>
-			Global variables of the sketch should not be changed from the draw method or methods (indirectly) called
-			from the draw method.
-		</description>
-		<priority>3</priority>
-		<example>
-			<![CDATA[
+                 void setup() {
+                     //Wrong: Do not use drawing functions from non-drawing methods.
+                     rect(x, y, x2, y2);
+                 }
+             ]]>
+         </example>
+     </rule>
+     -->
+    <rule name="DrawingStateChangeRule"
+          message="Do not change global variable {0} from method {1}, {1} is part of the draw sequence."
+          class="nl.utwente.processing.pmdrules.DrawingStateChangeRule">
+        <description>
+            Global variables of the sketch should not be changed from the draw method or methods (indirectly) called
+            from the draw method.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
 			    private float alpha;
 
 				void setup() {
@@ -49,131 +50,211 @@
 				    alpha += 0.5;
 				}
 			]]>
-		</example>
-	</rule>
+        </example>
+    </rule>
 
-	<rule name="DecentralizedEventHandlingRule"
-		  message="Do not use global event variable {0} in method {1}, {1} is not part of the event handling methods."
-		  class="nl.utwente.processing.pmdrules.DecentralizedEventHandlingRule">
-		<description>
-			Global event handling variables should only be used inside the specified event handler methods.
-		</description>
-		<priority>3</priority>
-		<example>
-			<![CDATA[
-				void draw() {
-				    //Wrong: Do not use mouseX, mouseY outside event handlers
-				    rect(mouseX, mouseY, mouseX + 20, mouseY + 20);
-				}
-			]]>
-		</example>
-	</rule>
+    <rule name="DecentralizedEventHandlingRule"
+          message="Do not use global event variable {0} in method {1}, as {1} is not one of the event handling methods."
+          class="nl.utwente.processing.pmdrules.DecentralizedEventHandlingRule">
+        <description>
+            Global event handling variables should only be used inside the specified event handler methods.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                 void draw() {
+                     //Wrong: Do not use mouseX, mouseY outside event handlers
+                     rect(mouseX, mouseY, mouseX + 20, mouseY + 20);
+                 }
+             ]]>
+        </example>
+    </rule>
 
-	<rule name="PixelHardcodeIgnoranceRule"
-		  message="Do not use literals for pixels for {0} inside method {1}."
-		  class="nl.utwente.processing.pmdrules.PixelHardcodeIgnoranceRule">
-		<description>
-			Drawing functions should not use pixels, but constants or variables instead.
-		</description>
-		<priority>3</priority>
-		<example>
-			<![CDATA[
-				void draw() {
-				    //Wrong: Do not use hardcoded pixels.
-				    rect(10, 10, 20, 20);
-				}
-			]]>
-		</example>
-	</rule>
+    <rule name="PixelHardcodeIgnoranceRule"
+          message="Do not use literals for pixels for {0} inside method {1}."
+          class="nl.utwente.processing.pmdrules.PixelHardcodeIgnoranceRule">
+        <description>
+            Drawing functions should not use pixels, but constants or variables instead.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                 void draw() {
+                     //Wrong: Do not use hardcoded pixels.
+                     rect(10, 10, 20, 20);
+                 }
+             ]]>
+        </example>
+    </rule>
 
-	<rule name="StatelessClassRule"
-		  message="Class {0} does not declare any fields. Decide if any of the global variables belong here, or alternatively if these methods belong to some other class."
-		  class="nl.utwente.processing.pmdrules.StatelessClassRule">
-		<description>
-			Stateless classes are not allowed. Utility classes with only methods should define their methods in the
-			top class (global scope).
-		</description>
-		<priority>3</priority>
-		<example>
-			<![CDATA[
-				//Wrong: This class has no fields and is stateless.
-				class Stateless {
-					void draw() {
-						rect(20, 30, 10, 10);
-					}
-				}
-			]]>
-		</example>
-	</rule>
+    <rule name="StatelessClassRule"
+          message="Class {0} does not declare any fields. Decide if any of the global variables belong here, or alternatively if these methods belong to some other class."
+          class="nl.utwente.processing.pmdrules.StatelessClassRule">
+        <description>
+            Stateless classes are not allowed. Utility classes with only methods should define their methods in the
+            top class (global scope).
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                 //Wrong: This class has no fields and is stateless.
+                 class Stateless {
+                     void draw() {
+                         rect(20, 30, 10, 10);
+                     }
+                 }
+             ]]>
+        </example>
+    </rule>
 
-	<rule name="LongMethodRule"
-		  message="The method {0} is too long, {1} lines of code are counted. The method should be made more efficient or split in multiple methods."
-		  class="nl.utwente.processing.pmdrules.LongMethodRule">
-		<description>
-			Methods longer than a certain amount of rules (25 by default) should be split into seperate method calls.
-		</description>
-		<priority>3</priority>
-		<example>
-			<![CDATA[
-				void method() {
-					//Wrong: method is too long.
-					println("T")
-					println("h")
-					println("i")
-					println("s")
-					println("")
-					println("m")
-					println("e")
-					println("t")
-					println("h")
-					println("o")
-					println("d")
-					println("")
-					println("i")
-					println("s")
-					println("")
-					println("w")
-					println("a")
-					println("y")
-					println("")
-					println("t")
-					println("o")
-					println("o")
-					println("")
-					println("l")
-					println("o")
-					println("n")
-					println("g")
-				}
-			]]>
-		</example>
-	</rule>
+    <rule name="LongMethodRule"
+          message="The method {0} is too long, {1} lines of code are counted. The method should be made more efficient, split in multiple methods, or responsibilty should be delegated to other objects/classes."
+          class="nl.utwente.processing.pmdrules.LongMethodRule">
+        <description>
+            Methods longer than a certain amount of rules (50 by default) should be split into separate method calls.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                 void method() {
+                     //Wrong: method is too long.
+                     println("T")
+                     println("h")
+                     println("i")
+                     println("s")
+                     println("")
+                     println("m")
+                     println("e")
+                     println("t")
+                     println("h")
+                     println("o")
+                     println("d")
+                     println("")
+                     println("i")
+                     println("s")
+                     println("")
+                     println("w")
+                     println("a")
+                     println("y")
+                     println("")
+                     println("t")
+                     println("o")
+                     println("o")
+                     println("")
+                     println("l")
+                     println("o")
+                     println("n")
+                     println("g")
+                 }
+             ]]>
+        </example>
+    </rule>
 
-	<rule name="LongParameterListRule"
-		  message="The method {0} has too many parameters, {1} are counted. The parameters should be merged into objects or the method should be split."
-		  class="nl.utwente.processing.pmdrules.LongParameterListRule">
-		<description>
-			Methods should not accept more than a specified amount of parameters (5 by default).
-		</description>
-		<priority>3</priority>
-		<example>
-			<![CDATA[
-				void correct(int x1, int x2, int y1, int y2, int r) {
-					//Correct, 5 parameters.
-				}
-				void incorrect(int x1, int x2, int z1, int y1, int y2, int z2) {
-					//Wrong: 6 parameters.
-				}
-			]]>
-		</example>
-	</rule>
+    <rule name="LongParameterListRule"
+          message="The method {0} has too many parameters, {1} are counted. The parameters should be merged into objects or the method should be split."
+          class="nl.utwente.processing.pmdrules.LongParameterListRule">
+        <description>
+            Methods should not accept too many parameters.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                 void correct(int x1, int x2, int y1, int y2, int r) {
+                     //Correct, 5 parameters.
+                 }
+                 void incorrect(int x1, int x2, int z1, int y1, int y2, int z2) {
+                     //Wrong: 6 parameters.
+                 }
+             ]]>
+        </example>
+    </rule>
 
-	<rule name="GodClassRule"
-		  message="The class {0} has too much responsibility. The program design should be reconsidered (God Class, WMC={1}, ATFD={2}, TCC={3})"
-		  class="nl.utwente.processing.pmdrules.GodClassRule">
-		<description>
-			Classes should not become a God Class, e.g. they should not take total responsibility for the whole application.
-		</description>
-		<priority>3</priority>
-	</rule>
+    <rule name="GodClassRule"
+          message="The class {0} has too much responsibility. The program design should be reconsidered."
+          class="nl.utwente.processing.pmdrules.GodClassRule">
+        <description>
+            Classes should not become a God Class, e.g. they should not take total responsibility for the whole application.
+        </description>
+        <priority>3</priority>
+    </rule>
+
+
+
+
+    <rule ref="rulesets/java/codesize.xml/StdCyclomaticComplexity"
+          message = "The {0} ''{1}'' seems to be very complex. Consider dividing the work."    >
+        <properties>
+            <property name="violationSuppressRegex" value="^The class.*"/>
+            <property name="reportLevel" value="12"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/java/codesize.xml/TooManyFields"
+          message="You have many class variables/attributes. Check if some could be local, or should be part of a separate object. " >
+        <properties>
+            <property name="maxfields" value="12"/>
+        </properties>
+    </rule>
+
+    <rule ref="rulesets/java/basic.xml/UnconditionalIfStatement"/>
+    <rule ref="rulesets/java/design.xml/UseUtilityClass"/>
+    <rule ref="rulesets/java/design.xml/AvoidDeeplyNestedIfStmts">
+        <properties>
+            <property name="problemDepth" value="4"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/java/design.xml/AvoidReassigningParameters"/>
+    <rule ref="rulesets/java/braces.xml"/>
+    <rule ref="rulesets/java/optimizations.xml/AddEmptyString"/>
+    <rule ref="rulesets/java/controversial.xml/AssignmentInOperand"/>
+    <rule ref="rulesets/java/controversial.xml/AtLeastOneConstructor" message = "Class {0} should have a constructor.">
+        <properties>
+            <property name="violationSuppressRegex" value=".*Processing.*"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/java/design.xml/SingularField">
+        <properties>
+            <property name="checkInnerClasses" value="true"/>
+        </properties>
+    </rule>
+
+
+
+    <rule ref="rulesets/java/design.xml/IdempotentOperations"/>
+    <rule ref="rulesets/java/design.xml/SimplifyBooleanExpressions"/>
+    <rule ref="rulesets/java/design.xml/UncommentedEmptyMethodBody"/>
+    <rule ref="rulesets/java/design.xml/UncommentedEmptyConstructor" message="It is very uncommon to have an empty constructor. Use it to set the initial values of a new object."/>
+    <rule ref="rulesets/java/empty.xml/EmptyIfStmt"/>
+    <rule ref="rulesets/java/empty.xml/EmptyStatementNotInLoop"/>
+    <rule ref="rulesets/java/naming.xml/AvoidFieldNameMatchingMethodName"/>
+    <rule ref="rulesets/java/naming.xml/AvoidFieldNameMatchingTypeName"/>
+    <rule ref="rulesets/java/naming.xml/VariableNamingConventions">
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/java/naming.xml/LongVariable">
+        <properties>
+            <property name="minimum" value="24"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/java/naming.xml/ClassNamingConventions">
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/java/naming.xml/MethodNamingConventions">
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/java/naming.xml/ShortMethodName"/>
+    <rule ref="rulesets/java/naming.xml/ShortVariable" >
+        <properties>
+            <property name="violationSuppressRegex" value=".*like [xyzijklmnt]_?$|.*like d[xyzt]_?$|.*like [id]_?$"/>
+        </properties>
+    </rule>
+    <rule ref="rulesets/java/unusedcode.xml/UnusedFormalParameter"/>
+    <rule ref="rulesets/java/unusedcode.xml/UnusedLocalVariable"/>
+
+
 </ruleset>
