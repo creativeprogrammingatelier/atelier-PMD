@@ -26,8 +26,8 @@ public class ProcessingProject {
     /** Roughly convert Processing code to Java code */
     private String toJava(String code) {
         code = START_JAVA_CODE + code + END_JAVA_CODE;
-        code = code.replace("int(", "toInt(");
-        code = code.replace("int (", "toInt (");
+        code = code.replaceAll("\\bint\\s*\\(", "toInt(");
+        code = code.replaceAll("\\bfloat\\s*\\(", "toFloat(");
         code = code.replace(" = #", " = 0x");
         code = code.replace("(#", "(0x");
         code = code.replaceAll("import(.)*;", "");
