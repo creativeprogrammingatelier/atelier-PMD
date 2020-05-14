@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.Iterator;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
@@ -15,13 +14,13 @@ import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
 
 import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.exceptions.CryptoException;
-import nl.utwente.processing.Processing;
+import nl.utwente.processing.ProcessingProject;
 
 /** PMD violation and error renderer that submits comments to Atelier */
 public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     private final String submissionID;
-    private final List<PMDFile> files;
+    private final ProcessingProject project;
     private final AtelierAPI api;
 
     /**
@@ -30,10 +29,10 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
      * @param files list of files that PMD is running through
      * @param api helper to create Atelier API requests
      */
-    public AtelierPMDRenderer(String submissionID, List<PMDFile> files, AtelierAPI api) {
+    public AtelierPMDRenderer(String submissionID, ProcessingProject project, AtelierAPI api) {
         super("Atelier-" + submissionID, "Uploads comments directly to Atelier, on submission " + submissionID);
         this.submissionID = submissionID;
-        this.files = files;
+        this.project = project;
         this.api = api;
     }
 
@@ -73,17 +72,16 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             System.out.println("Found violation for rule " + violation.getRule().getName());
 
-            var file = files.stream()
-                .filter(f -> f.getName().equals(violation.getFilename()))
-                .findAny().get();
+            var begin = project.mapJavaProjectLineNumber(violation.getBeginLine());
+            var end = project.mapJavaProjectLineNumber(violation.getEndLine());
 
-            var lineStart = Processing.mapLineNumber(violation.getBeginLine());
+            var lineStart = begin.getLine();
             var charStart = violation.getBeginColumn();
-            var lineEnd = Processing.mapLineNumber(violation.getEndLine());
+            var lineEnd = end.getLine();
             var charEnd = violation.getEndColumn();
 
             if (lineStart == lineEnd && charStart == charEnd) {
-                var line = file.getContent().lines().collect(Collectors.toList()).get(lineStart - 1);
+                var line = begin.getFile().getContent().lines().collect(Collectors.toList()).get(lineStart - 1);
                 charStart = line.indexOf(line.trim());
                 charEnd = line.length();
             } else {
@@ -95,14 +93,14 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             // Add snippet to the comment, Atelier uses zero-indexing
             var snippet = new JsonObject();
-            var start = new JsonObject();
-            start.addProperty("line", lineStart - 1);
-            start.addProperty("character", charStart);
-            snippet.add("start", start);
-            var end = new JsonObject();
-            end.addProperty("line", lineEnd - 1);
-            end.addProperty("character", charEnd);
-            snippet.add("end", end);
+            var snippetStart = new JsonObject();
+            snippetStart.addProperty("line", lineStart - 1);
+            snippetStart.addProperty("character", charStart);
+            snippet.add("start", snippetStart);
+            var snippetEnd = new JsonObject();
+            snippetEnd.addProperty("line", lineEnd - 1);
+            snippetEnd.addProperty("character", charEnd);
+            snippet.add("end", snippetEnd);
             json.add("snippet", snippet);
 
             // Set the default visibility to private
@@ -112,7 +110,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             json.addProperty("comment", violation.getDescription());
 
             try {
-                var res = api.postComment(file.getId(), json);
+                var res = api.postComment(begin.getFile().getId(), json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
@@ -131,10 +129,6 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
         for (var err : errors) {
             System.out.println("Got error: " + err.getMsg());
 
-            var file = files.stream()
-                .filter(f -> f.getName().equals(err.getFile()))
-                .findAny().get();
-
             var json = new JsonObject();
 
             json.addProperty("submissionID", submissionID);
@@ -142,7 +136,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             json.addProperty("comment", err.getMsg());
 
             try {
-                var res = api.postComment(file.getId(), json);
+                var res = api.postProjectComment(submissionID, json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();

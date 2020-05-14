@@ -31,6 +31,13 @@ public class AtelierAPI {
         return res;
     }
 
+    private HttpResponse makeAuthenticatedJsonRequest(String url, JsonObject json) throws IOException, CryptoException {
+        var request = new HttpPost(config.getAtelierHost() + url);
+        request.setEntity(new StringEntity(json.toString()));
+        request.setHeader("Content-Type", "application/json");
+        return makeAuthenticatedRequest(request);
+    }
+
     /** Get the file body for a given fileID */
     public HttpResponse getFile(String fileID) throws IOException, CryptoException {
         var fileRequest = new HttpGet(config.getAtelierHost() + "/api/file/" + fileID + "/body");
@@ -39,9 +46,11 @@ public class AtelierAPI {
 
     /** Create a new comment thread on a file */
     public HttpResponse postComment(String fileID, JsonObject json) throws IOException, CryptoException {
-        var commentReq = new HttpPost(config.getAtelierHost() + "/api/commentThread/file/" + fileID);
-        commentReq.setEntity(new StringEntity(json.toString()));
-        commentReq.setHeader("Content-Type", "application/json");
-        return makeAuthenticatedRequest(commentReq);
+        return makeAuthenticatedJsonRequest("/api/commentThread/file/" + fileID, json);
+    }
+
+    /** Create a new comment thread on a submission */
+    public HttpResponse postProjectComment(String submissionID, JsonObject json) throws IOException, CryptoException {
+        return makeAuthenticatedJsonRequest("/api/commentThread/submission/" + submissionID, json);
     }
 }
