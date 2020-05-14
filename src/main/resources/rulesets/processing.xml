@@ -189,7 +189,7 @@
         </properties>
     </rule>
     <rule ref="rulesets/java/codesize.xml/TooManyFields"
-          message="You have many class variables/attributes. Check if some could be local, or should be part of a separate object." >
+          message="You have many class variables/attributes. Check if some could be local, or should be part of a separate object. #structure" >
         <properties>
             <property name="maxfields" value="12"/>
         </properties>
@@ -206,7 +206,11 @@
     <rule ref="rulesets/java/braces.xml"/>
     <rule ref="rulesets/java/optimizations.xml/AddEmptyString"/>
     <rule ref="rulesets/java/controversial.xml/AssignmentInOperand"/>
-    <rule ref="rulesets/java/controversial.xml/AtLeastOneConstructor"/>
+    <rule ref="rulesets/java/controversial.xml/AtLeastOneConstructor" message = "Class {0} should have a constructor.">
+        <properties>
+            <property name="violationSuppressRegex" value=".*Processing.*"/>
+        </properties>
+    </rule>
     <rule ref="rulesets/java/design.xml/SingularField">
         <properties>
             <property name="checkInnerClasses" value="true"/>
@@ -244,7 +248,7 @@
         </properties>
     </rule>
     <rule ref="rulesets/java/naming.xml/ShortMethodName"/>
-    <rule ref="rulesets/java/naming.xml/ShortVariable">
+    <rule ref="rulesets/java/naming.xml/ShortVariable" >
         <properties>
             <property name="violationSuppressRegex" value=".*like [xyzijklmnt]_?$|.*like d[xyzt]_?$|.*like [id]_?$"/>
         </properties>
