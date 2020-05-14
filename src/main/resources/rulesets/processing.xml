@@ -189,7 +189,7 @@
         </properties>
     </rule>
     <rule ref="rulesets/java/codesize.xml/TooManyFields"
-          message="You have many class variables/attributes. Check if some could be local, or should be part of a separate object. #structure" >
+          message="You have many class variables/attributes. Check if some could be local, or should be part of a separate object. " >
         <properties>
             <property name="maxfields" value="12"/>
         </properties>
