@@ -14,6 +14,7 @@ import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
 
 import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.exceptions.CryptoException;
+import nl.utwente.processing.LineInFile;
 import nl.utwente.processing.ProcessingProject;
 
 /** PMD violation and error renderer that submits comments to Atelier */
@@ -72,8 +73,18 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             System.out.println("Found violation for rule " + violation.getRule().getName());
 
-            var begin = project.mapJavaProjectLineNumber(violation.getBeginLine());
-            var end = project.mapJavaProjectLineNumber(violation.getEndLine());
+            LineInFile begin, end;
+            try {
+                begin = project.mapJavaProjectLineNumber(violation.getBeginLine());
+                end = project.mapJavaProjectLineNumber(violation.getEndLine());
+                if (!begin.getFile().getId().equals(end.getFile().getId())) {
+                    System.out.println("Dismissing violation: Line numbers are not in the same source file");
+                    continue;
+                }
+            } catch (IndexOutOfBoundsException ex) {
+                System.out.println("Dismissing violation: Line number is not in a source file");
+                continue;
+            }
 
             var lineStart = begin.getLine();
             var charStart = violation.getBeginColumn();
