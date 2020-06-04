@@ -7,28 +7,26 @@
         Ruleset with custom rules specific to Processing code.
         Developed as part of the "The Smell of Poor Design" bachelor research project.
     </description>
-    <!-- Commented out sice it does currently not work
 
-     <rule name="DecentralizedDrawingRule"
-           message="Do not use drawing method {0} in method {1}, {1} is called outside of the draw sequence and can therefore not contain drawing methods."
-           class="nl.utwente.processing.pmdrules.DecentralizedDrawingRule">
-         <description>
-             Methods that draw on screen should only be called from drawing methods: methods that are (indirectly) called
-             solely by the draw method.
-         </description>
-         <priority>3</priority>
-         <example>
-             <![CDATA[
-                 float x, y, x2, y2;
+    <rule name="DecentralizedDrawingRule"
+          message="Do not use drawing method {0} in method {1}, {1} is called outside of the draw sequence and can therefore not contain drawing methods."
+          class="nl.utwente.processing.pmdrules.DecentralizedDrawingRule">
+        <description>
+            Methods that draw on screen should only be called from drawing methods: methods that are (indirectly) called
+            solely by the draw method.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                float x, y, x2, y2;
+                void setup() {
+                    //Wrong: Do not use drawing functions from non-drawing methods.
+                    rect(x, y, x2, y2);
+                }
+            ]]>
+        </example>
+    </rule>
 
-                 void setup() {
-                     //Wrong: Do not use drawing functions from non-drawing methods.
-                     rect(x, y, x2, y2);
-                 }
-             ]]>
-         </example>
-     </rule>
-     -->
     <rule name="DrawingStateChangeRule"
           message="Do not change global variable {0} from method {1}, {1} is part of the draw sequence."
           class="nl.utwente.processing.pmdrules.DrawingStateChangeRule">

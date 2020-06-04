@@ -22,6 +22,7 @@ import nl.utwente.atelier.exceptions.CryptoException;
 import nl.utwente.atelier.pmd.AtelierPMDRenderer;
 import nl.utwente.atelier.pmd.PMDFile;
 import nl.utwente.atelier.pmd.PMDFileProcessor;
+import nl.utwente.processing.ProcessingProject;
 
 /** Handler for Webhook requests. It checks if the request is valid and handles supported events. */
 public class WebhookHandler {
@@ -118,28 +119,29 @@ public class WebhookHandler {
         System.out.printf("Handling submission %s%n", submissionID);
         try {
             var files = StreamSupport.stream(submission.get("files").getAsJsonArray().spliterator(), true)
-            .map(file -> file.getAsJsonObject())
-            .filter(file -> file.get("name").getAsString().endsWith(".pde"))
-            .map(file -> {
-                try {
-                    var fileName = file.get("name").getAsString();
-                    var fileID = file.get("ID").getAsString();
-                    var res = api.getFile(fileID);
-                    if (res.getStatusLine().getStatusCode() < 400) {
-                        var fileContent = new String(res.getEntity().getContent().readAllBytes());
-                        return new PMDFile(fileID, fileName, fileContent);
-                    } else {
-                        var message = String.format("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
-                        System.out.printf(message);
-                        throw new IOException(message);
+                .map(file -> file.getAsJsonObject())
+                .filter(file -> file.get("name").getAsString().endsWith(".pde"))
+                .map(file -> {
+                    try {
+                        var fileName = file.get("name").getAsString();
+                        var fileID = file.get("ID").getAsString();
+                        var res = api.getFile(fileID);
+                        if (res.getStatusLine().getStatusCode() < 400) {
+                            var fileContent = new String(res.getEntity().getContent().readAllBytes());
+                            return new PMDFile(fileID, fileName, fileContent);
+                        } else {
+                            var message = String.format("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
+                            System.out.printf(message);
+                            throw new IOException(message);
+                        }
+                    } catch (IOException | CryptoException ex) {
+                        throw new RuntimeException(ex);
                     }
-                } catch (IOException | CryptoException ex) {
-                    throw new RuntimeException(ex);
-                }
-            })
-            .collect(Collectors.toList());
-            var renderer = new AtelierPMDRenderer(submissionID, files, api);
-            pmd.ProcessFiles(files, renderer);
+                })
+                .collect(Collectors.toList());
+            var project = new ProcessingProject(files);
+            var renderer = new AtelierPMDRenderer(submissionID, project, api);
+            pmd.ProcessFiles(project, renderer);
         } catch (RuntimeException ex) {
 
         }
@@ -158,8 +160,9 @@ public class WebhookHandler {
             if (res.getStatusLine().getStatusCode() < 400) {
                 var fileContent = new String(res.getEntity().getContent().readAllBytes());
                 var files = Collections.singletonList(new PMDFile(fileID, fileName, fileContent));
-                var renderer = new AtelierPMDRenderer(submissionID, files, api);
-                pmd.ProcessFiles(files, renderer);
+                var project = new ProcessingProject(files);
+                var renderer = new AtelierPMDRenderer(submissionID, project, api);
+                pmd.ProcessFiles(project, renderer);
             } else {
                 System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
             }
