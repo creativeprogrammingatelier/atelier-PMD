@@ -116,6 +116,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             // Set the default visibility to private
             json.addProperty("visibility", "private");
+            json.addProperty("automated", true);
 
             // Set the text of the comment
             json.addProperty("comment", violation.getDescription());
@@ -144,6 +145,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             json.addProperty("submissionID", submissionID);
             json.addProperty("visibility", "private");
+            json.addProperty("automated", true);
             json.addProperty("comment", err.getMsg());
 
             try {
