@@ -225,7 +225,6 @@
     <rule ref="category/java/errorprone.xml/EmptyStatementNotInLoop"/>
     <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingMethodName"/>
     <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingTypeName"/>
-    <!-- Three New Rules Added -->
     <rule ref="category/java/codestyle.xml/LocalVariableNamingConventions">
         <properties>
             <property name="violationSuppressRegex" value=".*underscore.*"/>
@@ -241,7 +240,6 @@
             <property name="violationSuppressRegex" value=".*underscore.*"/>
         </properties>
     </rule>
-    <!-- Stop -->
     <rule ref="category/java/codestyle.xml/LongVariable">
         <properties>
             <property name="minimum" value="24"/>
