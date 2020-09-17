@@ -3,8 +3,6 @@ package nl.utwente.processing;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import nl.utwente.atelier.pmd.PMDFile;
-
 // "hacks to make  processing conversion work for java parsing"
 // https://github.com/swordiemen/zita/blob/master/src/main/java/nl/utwente/zita/parsing/Parser.java
 
@@ -13,9 +11,9 @@ public class ProcessingProject {
     private static String START_JAVA_CODE = "public class Processing {\r\n";
     private static String END_JAVA_CODE = "\r\n}";
 
-    private List<PMDFile> files;
+    private List<ProcessingFile> files;
     
-    public ProcessingProject(List<PMDFile> files) {
+    public ProcessingProject(List<ProcessingFile> files) {
         this.files = files;
     }
 

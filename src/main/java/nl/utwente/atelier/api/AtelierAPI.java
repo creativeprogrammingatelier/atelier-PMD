@@ -2,7 +2,7 @@ package nl.utwente.atelier.api;
 
 import com.google.gson.JsonObject;
 import nl.utwente.atelier.exceptions.CryptoException;
-import nl.utwente.atelier.pmd.server.Configuration;
+import nl.utwente.atelierpmd.server.Configuration;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;

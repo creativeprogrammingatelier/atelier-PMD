@@ -27,7 +27,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
     /**
      * Create a new renderer for submitting comments to Atelier
      * @param submissionID the ID for the submission that is getting checked
-     * @param files list of files that PMD is running through
+     * @param project the project that PMD is running through
      * @param api helper to create Atelier API requests
      */
     public AtelierPMDRenderer(String submissionID, ProcessingProject project, AtelierAPI api) {
@@ -145,8 +145,8 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
             json.addProperty("submissionID", submissionID);
             json.addProperty("visibility", "private");
-            json.addProperty("automated", true);
             json.addProperty("comment", err.getMsg());
+            json.addProperty("automated", true);
 
             try {
                 var res = api.postProjectComment(submissionID, json);

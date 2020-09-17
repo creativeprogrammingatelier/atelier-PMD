@@ -1,4 +1,4 @@
-package nl.utwente.atelier.pmd.server;
+package nl.utwente.atelierpmd.server;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -16,19 +16,19 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import nl.utwente.atelier.api.AtelierAPI;
-import nl.utwente.atelier.exceptions.PMDException;
+import nl.utwente.processing.pmd.PMDException;
 
 import nl.utwente.atelier.exceptions.CryptoException;
 import nl.utwente.atelier.pmd.AtelierPMDRenderer;
-import nl.utwente.atelier.pmd.PMDFile;
-import nl.utwente.atelier.pmd.PMDFileProcessor;
+import nl.utwente.processing.ProcessingFile;
 import nl.utwente.processing.ProcessingProject;
+import nl.utwente.processing.pmd.PMDRunner;
 
 /** Handler for Webhook requests. It checks if the request is valid and handles supported events. */
 public class WebhookHandler {
     private final String webhookSecret;
     private final AtelierAPI api;
-    private final PMDFileProcessor pmd = new PMDFileProcessor();
+    private final PMDRunner pmd = new PMDRunner();
 
     public WebhookHandler(Configuration config, AtelierAPI api) {
         this.webhookSecret = config.getWebhookSecret();
@@ -128,7 +128,7 @@ public class WebhookHandler {
                         var res = api.getFile(fileID);
                         if (res.getStatusLine().getStatusCode() < 400) {
                             var fileContent = new String(res.getEntity().getContent().readAllBytes());
-                            return new PMDFile(fileID, fileName, fileContent);
+                            return new ProcessingFile(fileID, fileName, fileContent);
                         } else {
                             var message = String.format("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
                             System.out.printf(message);
@@ -141,7 +141,7 @@ public class WebhookHandler {
                 .collect(Collectors.toList());
             var project = new ProcessingProject(files);
             var renderer = new AtelierPMDRenderer(submissionID, project, api);
-            pmd.ProcessFiles(project, renderer);
+            pmd.Run(project, renderer);
         } catch (RuntimeException ex) {
 
         }
@@ -159,10 +159,10 @@ public class WebhookHandler {
             var res = api.getFile(fileID);
             if (res.getStatusLine().getStatusCode() < 400) {
                 var fileContent = new String(res.getEntity().getContent().readAllBytes());
-                var files = Collections.singletonList(new PMDFile(fileID, fileName, fileContent));
+                var files = Collections.singletonList(new ProcessingFile(fileID, fileName, fileContent));
                 var project = new ProcessingProject(files);
                 var renderer = new AtelierPMDRenderer(submissionID, project, api);
-                pmd.ProcessFiles(project, renderer);
+                pmd.Run(project, renderer);
             } else {
                 System.out.printf("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
             }

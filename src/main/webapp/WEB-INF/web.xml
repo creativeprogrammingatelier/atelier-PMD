@@ -9,7 +9,7 @@
 
     <servlet>
         <servlet-name>Webhook</servlet-name>
-        <servlet-class>nl.utwente.atelier.pmd.server.Webhook</servlet-class>
+        <servlet-class>nl.utwente.atelierpmd.server.Webhook</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>Webhook</servlet-name>

@@ -15,7 +15,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 
 import nl.utwente.atelier.exceptions.CryptoException;
-import nl.utwente.atelier.pmd.server.Configuration;
+import nl.utwente.atelierpmd.server.Configuration;
 
 /** Helper class for dealing with authentication for the Atelier API */
 public class Authentication {

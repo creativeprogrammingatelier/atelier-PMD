@@ -1,4 +1,4 @@
-package nl.utwente.atelier.pmd.server;
+package nl.utwente.atelierpmd.server;
 
 import java.io.FileReader;
 import java.io.IOException;
