@@ -42,6 +42,12 @@ The image exposes one volume in which you have to provide your configuration: `/
 
 ## Debugging in IntelliJ
 
+### Local rule testing
+
+If you only want to test changes to PMD rules, you don't need to setup the full Atelier environment. You can execute the class *nl.utwente.atelierpmd.LocalRunner* with a path to a Processing project folder to test the PMD rules.
+
+### With Atelier integration
+
 To debug Atelier-PMD in IntelliJ, you'll need to configure a Tomcat server in the *Run/Debug Configurations*. First create a new *Local Tomcat Server* configuration, and configure it to use your local Tomcat installation. Then you need to add the project to the server: go to the *Deployment* tab and add the `atelier-pmd:war exploded` artifact. Change the *Application context* to `/` to run the application at the root of the server. 
 
 You also need to make sure you have a valid configuration for Atelier-PMD: copy the `config/example.json` to `config/development.json` and change it to reflect your local environment. Then in the *Startup/Connection* tab you need to set the `ATELIER_PMD_CONFIG` to the full path to this `development.json` file. Make sure to do this for both the *Run* and *Debug* configurations.
