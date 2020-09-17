@@ -25,7 +25,8 @@ public class PMDFileProcessor {
             var config = new PMDConfiguration();
             config.setMinimumPriority(RulePriority.LOW);
             config.setRuleSets("rulesets/processing.xml");
-            var ruleSetFactory = RulesetsFactoryUtils.getRulesetFactory(config);
+            config.setIgnoreIncrementalAnalysis(true);
+            var ruleSetFactory = RulesetsFactoryUtils.createFactory(config);
 
             renderer.start();
 
