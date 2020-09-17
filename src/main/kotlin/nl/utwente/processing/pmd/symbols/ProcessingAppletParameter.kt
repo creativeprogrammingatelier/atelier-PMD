@@ -1,4 +1,4 @@
-package nl.utwente.processing.pmdrules.symbols
+package nl.utwente.processing.pmd.symbols
 
 /**
  * Simple data class which defines an processing applet method parameter.

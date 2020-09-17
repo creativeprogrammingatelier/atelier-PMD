@@ -1,13 +1,13 @@
-package nl.utwente.processing.pmdrules
+package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.lang.java.symboltable.ClassScope
 import net.sourceforge.pmd.lang.java.symboltable.JavaNameOccurrence
-import nl.utwente.processing.pmdrules.symbols.ProcessingApplet
-import nl.utwente.processing.pmdrules.utils.callStack
-import nl.utwente.processing.pmdrules.utils.findMethod
+import nl.utwente.processing.pmd.symbols.ProcessingApplet
+import nl.utwente.processing.pmd.utils.callStack
+import nl.utwente.processing.pmd.utils.findMethod
 
 /**
  * Class which implements the drawing state change smell as PMD rule.
@@ -26,7 +26,7 @@ class DrawingStateChangeRule: AbstractJavaRule() {
                     if (occurrence is JavaNameOccurrence &&
                             (occurrence.isOnLeftHandSide || occurrence.isSelfAssignment) && method in drawStack) {
                         this.addViolationWithMessage(data, occurrence.location, message,
-                                kotlin.arrayOf(variable.name, method.methodName))
+                                kotlin.arrayOf(variable.name, method.name))
                     }
                 }
             }

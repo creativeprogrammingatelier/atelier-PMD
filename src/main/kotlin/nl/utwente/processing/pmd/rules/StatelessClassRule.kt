@@ -1,4 +1,4 @@
-package nl.utwente.processing.pmdrules
+package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule

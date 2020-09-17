@@ -1,4 +1,4 @@
-package nl.utwente.processing.pmdrules
+package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.rule.design.ExcessiveNodeCountRule

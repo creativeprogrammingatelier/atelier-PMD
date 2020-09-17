@@ -1,15 +1,13 @@
-package nl.utwente.processing.pmdrules
+package nl.utwente.processing.pmd.rules
 
-import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
-import net.sourceforge.pmd.lang.java.symboltable.ClassScope
-import net.sourceforge.pmd.lang.java.symboltable.MethodScope
-import nl.utwente.processing.pmdrules.symbols.ProcessingApplet
-import nl.utwente.processing.pmdrules.symbols.ProcessingAppletMethod
-import nl.utwente.processing.pmdrules.utils.*
+import nl.utwente.processing.pmd.symbols.ProcessingApplet
+import nl.utwente.processing.pmd.utils.hasLiteralArguments
+import nl.utwente.processing.pmd.utils.isMethodCall
+import nl.utwente.processing.pmd.utils.matches
 
 /**
  * Class which implements the pixel hardcode ignorance smell as PMD rule.

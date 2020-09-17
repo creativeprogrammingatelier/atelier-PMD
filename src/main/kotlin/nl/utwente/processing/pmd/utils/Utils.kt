@@ -1,4 +1,4 @@
-package nl.utwente.processing.pmdrules.utils
+package nl.utwente.processing.pmd.utils
 
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
 import net.sourceforge.pmd.lang.java.symboltable.MethodNameDeclaration

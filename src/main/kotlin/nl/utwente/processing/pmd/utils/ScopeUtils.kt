@@ -1,12 +1,12 @@
-package nl.utwente.processing.pmdrules.utils
+package nl.utwente.processing.pmd.utils
 
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
 import net.sourceforge.pmd.lang.java.symboltable.ClassScope
 import net.sourceforge.pmd.lang.java.symboltable.MethodNameDeclaration
 import net.sourceforge.pmd.lang.java.symboltable.SourceFileScope
-import net.sourceforge.pmd.lang.symboltable.NameOccurrence
 import net.sourceforge.pmd.lang.symboltable.Scope
+import net.sourceforge.pmd.lang.symboltable.ScopedNode
 import java.util.stream.Collectors
 
 /**
@@ -20,6 +20,18 @@ val Scope.isPartOfTopClassScope : Boolean
         }
         return current.parent is SourceFileScope
     }
+
+fun <T> Scope.findDeclaration(node: ScopedNode, type: Class<T>): T? {
+    val matches = this.declarations
+            .filterKeys { type.isAssignableFrom(type) }
+            .filter { it.value.any { usage -> usage.location == node } }
+    if (matches.isEmpty()) {
+        if (this.parent == null) return null
+        else return this.parent.findDeclaration(node, type)
+    } else {
+        return type.cast(matches.keys.first())
+    }
+}
 
 /**
  * Extension method which returns a map of callers mapped to callee's.

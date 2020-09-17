@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Processing Ruleset"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0" xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+    <description>
+        Ruleset to use for Processing projects in Atelier.
+    </description>
+
+    <!-- Smell of Processing custom rules, defined in nl.utwente.processing.pmd.rules -->
+    <rule ref="rulesets/processing.xml"/>
+
+    <rule ref="category/java/design.xml/CyclomaticComplexity"
+          message = "The {0} ''{1}'' seems to be very complex. Consider dividing the work.">
+        <properties>
+            <property name="violationSuppressRegex" value="^The class.*"/>
+            <property name="methodReportLevel" value="12"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/TooManyFields" message="You have many class variables/attributes. Check if some could be local, or should be part of a separate object.">
+        <properties>
+            <property name="maxfields" value="12"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/errorprone.xml/UnconditionalIfStatement"/>
+    <rule ref="category/java/design.xml/UseUtilityClass"/>
+    <rule ref="category/java/design.xml/AvoidDeeplyNestedIfStmts">
+        <properties>
+            <property name="problemDepth" value="4"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/AvoidReassigningParameters"/>
+    <rule ref="rulesets/java/braces.xml"/>
+    <rule ref="category/java/performance.xml/AddEmptyString"/>
+    <rule ref="category/java/errorprone.xml/AssignmentInOperand"/>
+    <rule ref="category/java/codestyle.xml/AtLeastOneConstructor" message="Class {0} should have a constructor.">
+        <properties>
+            <property name="violationSuppressRegex" value=".*Processing.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/SingularField">
+        <properties>
+            <property name="checkInnerClasses" value="true"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/errorprone.xml/IdempotentOperations"/>
+    <rule ref="category/java/design.xml/SimplifyBooleanExpressions"/>
+    <rule ref="category/java/documentation.xml/UncommentedEmptyMethodBody"/>
+    <rule ref="category/java/documentation.xml/UncommentedEmptyConstructor" message="It is very uncommon to have an empty constructor. Use it to set the initial values of a new object."/>
+    <rule ref="category/java/errorprone.xml/EmptyIfStmt"/>
+    <rule ref="category/java/errorprone.xml/EmptyStatementNotInLoop"/>
+    <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingMethodName"/>
+    <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingTypeName"/>
+    <rule ref="category/java/codestyle.xml/LocalVariableNamingConventions">
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/FieldNamingConventions">
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/FormalParameterNamingConventions">
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/LongVariable">
+        <properties>
+            <property name="minimum" value="24"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/ClassNamingConventions">
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/MethodNamingConventions">
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/ShortMethodName"/>
+    <rule ref="category/java/codestyle.xml/ShortVariable">
+        <properties>
+            <property name="violationSuppressRegex" value=".*like [xyzijklmnt]_?$|.*like d[xyzt]_?$|.*like [id]_?$"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+
+</ruleset>

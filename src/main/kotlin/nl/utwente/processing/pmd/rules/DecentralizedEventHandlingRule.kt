@@ -1,4 +1,4 @@
-package nl.utwente.processing.pmdrules
+package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
@@ -6,10 +6,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.lang.java.symboltable.ClassScope
-import nl.utwente.processing.pmdrules.symbols.ProcessingApplet
-import nl.utwente.processing.pmdrules.utils.findMethods
-import nl.utwente.processing.pmdrules.utils.matches
-import nl.utwente.processing.pmdrules.utils.uniqueCallStack
+import nl.utwente.processing.pmd.symbols.ProcessingApplet
+import nl.utwente.processing.pmd.utils.findMethods
+import nl.utwente.processing.pmd.utils.matches
+import nl.utwente.processing.pmd.utils.uniqueCallStack
 
 /**
  * Class which implements the decentralized event handling smell as PMD rule.
@@ -40,7 +40,7 @@ class DecentralizedEventHandlingRule: AbstractJavaRule() {
         if (method != null && method !in this.eventStack) {
             val match = node.matches(*ProcessingApplet.EVENT_GLOBALS.toTypedArray())
             match?.let {
-                this.addViolationWithMessage(data, node, message, kotlin.arrayOf(match, method.methodName))
+                this.addViolationWithMessage(data, node, message, kotlin.arrayOf(match, method.name))
             }
         }
         return super.visit(node, data)
