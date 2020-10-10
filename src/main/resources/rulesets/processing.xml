@@ -28,7 +28,7 @@
     </rule>
 
     <rule name="DrawingStateChangeRule"
-          message="Do not change global variable {0} from method {1}, {1} is part of the draw sequence."
+          message="Do not change global variable {0} from {1}, {0} is not part of the scope of this class."
           class="nl.utwente.processing.pmd.rules.DrawingStateChangeRule">
         <description>
             Global variables of the sketch should not be changed from the draw method or methods (indirectly) called
@@ -174,5 +174,6 @@
             Classes should not become a God Class, e.g. they should not take total responsibility for the whole application.
         </description>
         <priority>3</priority>
+    </rule>
     </rule>
 </ruleset>

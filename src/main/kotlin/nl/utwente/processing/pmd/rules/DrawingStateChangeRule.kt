@@ -29,7 +29,7 @@ class DrawingStateChangeRule: AbstractJavaRule() {
                     if (expression.hasDescendantOfType(ASTAssignmentOperator::class.java)) {
                         if (!nodeVariableDeclarations.contains(expression.getFirstDescendantOfType(ASTName::class.java).image)) {
                             this.addViolationWithMessage(data, node, message,
-                                    arrayOf(expression.getFirstDescendantOfType(ASTName::class.java).image, method.name))
+                                    arrayOf(expression.getFirstDescendantOfType(ASTName::class.java).image, "method " + method.name))
                         }
                     }
                 }
