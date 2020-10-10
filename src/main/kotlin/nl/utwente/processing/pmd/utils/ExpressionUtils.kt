@@ -52,8 +52,8 @@ fun ASTPrimaryExpression.isInManipulation() : Boolean {
         is ASTPreIncrementExpression -> true
         is ASTPreDecrementExpression -> true
         is ASTStatementExpression ->
-            this.parent.getFirstChildOfType(ASTPrimaryExpression::class.java) == this
-            && this.parent.getFirstChildOfType(ASTAssignmentOperator::class.java) != null
+            (this.parent as ASTStatementExpression).getFirstChildOfType(ASTPrimaryExpression::class.java) == this
+            && (this.parent as ASTStatementExpression).getFirstChildOfType(ASTAssignmentOperator::class.java) != null
         else -> false
     }
 }

@@ -1,32 +1,46 @@
 package nl.utwente.processing.pmd.rules
 
-import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
-import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
+import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
+import net.sourceforge.pmd.lang.java.rule.codestyle.AtLeastOneConstructorRule
 import net.sourceforge.pmd.lang.java.symboltable.ClassScope
 import net.sourceforge.pmd.lang.java.symboltable.JavaNameOccurrence
+import net.sourceforge.pmd.lang.java.symboltable.MethodScope
+import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence
 import nl.utwente.processing.pmd.symbols.ProcessingApplet
 import nl.utwente.processing.pmd.utils.callStack
 import nl.utwente.processing.pmd.utils.findMethod
+import nl.utwente.processing.pmd.utils.getContainingClass
+import java.beans.MethodDescriptor
 
 /**
- * Class which implements the drawing state change smell as PMD rule.
+ * Class which refines the state change smell.
  */
 class DrawingStateChangeRule: AbstractJavaRule() {
 
     override fun visit(node: ASTClassOrInterfaceDeclaration, data: Any): Any? {
-        //Check if this is a top node, not a inner class.
-        if (!node.isNested) {
-            val scope = node.scope as? ClassScope
-            val methodDecl = scope?.findMethod(ProcessingApplet.DRAW_METHOD_SIGNATURE) ?: return super.visit(node, data)
-            val drawStack = scope.callStack(methodDecl)
-            for ((variable, occurrences) in scope.variableDeclarations) {
-                for (occurrence in occurrences) {
-                    val method = occurrence.location.getFirstParentOfType(ASTMethodDeclaration::class.java)
-                    if (occurrence is JavaNameOccurrence &&
-                            (occurrence.isOnLeftHandSide || occurrence.isSelfAssignment) && method in drawStack) {
-                        this.addViolationWithMessage(data, occurrence.location, message,
-                                kotlin.arrayOf(variable.name, method.name))
+        val scope = node.scope as? ClassScope
+        val nodeVariableDeclarations = extractImages(scope?.variableDeclarations!!)
+        for (declaration in node.declarations) {
+            if (declaration.kind == ASTAnyTypeBodyDeclaration.DeclarationKind.METHOD) {
+                val method = declaration.declarationNode as? ASTMethodDeclaration
+                for (expression in method?.body?.findDescendantsOfType(ASTStatementExpression::class.java)!!) {
+                    if (expression.hasDescendantOfType(ASTAssignmentOperator::class.java)) {
+                        if (!nodeVariableDeclarations.contains(expression.getFirstDescendantOfType(ASTName::class.java).image)) {
+                            this.addViolationWithMessage(data, node, message,
+                                    arrayOf(expression.getFirstDescendantOfType(ASTName::class.java).image, method.name))
+                        }
+                    }
+                }
+            } else if (declaration.kind == ASTAnyTypeBodyDeclaration.DeclarationKind.CONSTRUCTOR) {
+                val constructor = declaration.declarationNode as? ASTConstructorDeclaration
+                for (expression in constructor?.findDescendantsOfType(ASTStatementExpression::class.java)!!) {
+                    if (expression.hasDescendantOfType(ASTAssignmentOperator::class.java)) {
+                        if (!nodeVariableDeclarations.contains(expression.getFirstDescendantOfType(ASTName::class.java).image)) {
+                            this.addViolationWithMessage(data, node, message,
+                                    arrayOf(expression.getFirstDescendantOfType(ASTName::class.java).image, "Constructor"))
+                        }
                     }
                 }
             }
@@ -34,4 +48,12 @@ class DrawingStateChangeRule: AbstractJavaRule() {
         return super.visit(node, data)
     }
 
+    private fun extractImages(variableDeclarations: Map<VariableNameDeclaration, List<NameOccurrence>>): ArrayList<String> {
+        val res = ArrayList<String>()
+        for (variableName in variableDeclarations.keys) {
+            res.add(variableName.image)
+        }
+        println(res)
+        return res
+    }
 }
