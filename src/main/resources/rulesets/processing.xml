@@ -27,26 +27,45 @@
         </example>
     </rule>
 
-    <rule name="DrawingStateChangeRule"
-          message="Do not change global variable {0} from {1}, {0} is not part of the scope of this class."
-          class="nl.utwente.processing.pmd.rules.DrawingStateChangeRule">
+    <rule name="OutOfScopeStateChangeRule"
+          message="Do not change variable {0} in the {1}, as {0} is not defined within the scope of class."
+          class="nl.utwente.processing.pmd.rules.OutOfScopeStateChangeRule">
         <description>
-            Global variables of the sketch should not be changed from the draw method or methods (indirectly) called
-            from the draw method.
+            Variables, that are defined outside the scope of a class, should never have their state altered even if
+            they class has access to them. Boolean expressions are allowed however.
         </description>
         <priority>3</priority>
         <example>
             <![CDATA[
-			    private float alpha;
+			    Foo foo;
+			    int bar;
 
-				void setup() {
-					alpha = 0.5;
-				}
+			    void setup() {
+			        bar = 32;
+			        foo = new Foo();
+			    }
 
-				void draw() {
-					//Wrong: Do not change global scoped variables inside the draw method.
-				    alpha += 0.5;
-				}
+			    draw() {
+    			    // Wrong: Do not change the state of 'baz' withing 'foo', as 'baz' is not defined withing the
+    			    // scope of the main class.
+			        foo.baz = bar;
+			        // Correct: You can check the state of tne variable 'baz' even though it is not defined within
+			        // the scope of the main class.
+			        if (foo.baz == 0) {
+			            bar = -1;
+			        }
+			    {
+
+			    class Foo {
+			        int baz;
+
+			        Foo() {
+			            baz = 0;
+			            // Wrong: Do not change the state of global variable 'bar' from inner class 'Foo'.
+			            bar = 23;
+			        }
+
+			   }
 			]]>
         </example>
     </rule>
