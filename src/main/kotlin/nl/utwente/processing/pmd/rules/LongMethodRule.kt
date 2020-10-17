@@ -16,16 +16,6 @@ class LongMethodRule : AbstractJavaRule() {
 
     override fun visit(node: ASTMethodDeclaration, data: Any?): Any? {
         val ncss = MetricsUtil.computeMetric(JavaOperationMetricKey.NCSS, node)
-        val methods = node.body.findDescendantsOfType(ASTStatementExpression::class.java)
-        val numBlocks = 0.0
-        for (i in 0 until methods.size) {
-            val methodPrefix = methods.get(i).getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
-                    .getFirstDescendantOfType(ASTName::class.java).image
-            println(methodPrefix)
-//            if () {
-//
-//            }
-        }
         if (ncss > 50.0) {
             this.addViolationWithMessage(data, node, message, arrayOf(node.name, ncss))
         }
