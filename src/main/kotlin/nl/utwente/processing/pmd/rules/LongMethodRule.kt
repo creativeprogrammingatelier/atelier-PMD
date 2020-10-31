@@ -11,10 +11,12 @@ import nl.utwente.processing.pmd.symbols.ProcessingApplet
 import nl.utwente.processing.pmd.symbols.ProcessingAppletMethodCategory
 
 /**
- * Class which implements the long method smell as PMD rule. Based on the NcssMethodCountRule in PMD.
+ * Class which implements the long method smell as PMD rule. Based on the NcssMethodCountRule in PMD. The class has
+ * been modified to count blocks of Processing shape drawing methods as one line.
  */
 class LongMethodRule : AbstractJavaRule() {
 
+    // List to store all methods that can be within a block, can be expanded as needed in the future.
     private val targetMethods = listOf<ProcessingAppletMethodCategory>(
             ProcessingAppletMethodCategory.SHAPE,
             ProcessingAppletMethodCategory.SHAPE_2D,
@@ -25,6 +27,12 @@ class LongMethodRule : AbstractJavaRule() {
             ProcessingAppletMethodCategory.SHAPE_LD
     )
 
+    /**
+     *  Visitor goes through all method declarations and first uses the standard PMD NCSS method to get the
+     *  normal count. After which the expressions list is stored within and a block offset is defined.
+     *  The offset is calculated by identifying a shape method and from there incrementing the offset until the
+     *  first non shape method call or statement is reached.
+     */
     override fun visit(node: ASTMethodDeclaration, data: Any?): Any? {
         val ncss = MetricsUtil.computeMetric(JavaOperationMetricKey.NCSS, node)
         val expressions = node.body.findDescendantsOfType(ASTStatementExpression::class.java)
@@ -34,7 +42,6 @@ class LongMethodRule : AbstractJavaRule() {
             val methodName = expressions[i].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
                     .getFirstDescendantOfType(ASTName::class.java).image
             if (isShapeMethod(methodName) && i < expressions.size - 1) {
-                println("Block Start: $methodName")
                 for (j in i + 1 until expressions.size) {
                     val nextMethodName = expressions[j].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
                             .getFirstDescendantOfType(ASTName::class.java).image
@@ -53,6 +60,12 @@ class LongMethodRule : AbstractJavaRule() {
         return super.visit(node, data)
     }
 
+    /**
+     * Small function that check whether the method that is given is a shaped method.
+     *
+     * @param methodName
+     * @return Boolean if the method is defined as a shape method within target methods.
+     */
     private fun isShapeMethod(methodName: String): Boolean {
         ProcessingApplet.DRAW_METHODS.forEach {
             if (it.name == methodName && targetMethods.contains(it.category)) {
