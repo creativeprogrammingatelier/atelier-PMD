@@ -51,7 +51,7 @@
     <rule ref="category/java/errorprone.xml/EmptyStatementNotInLoop"/>
     <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingMethodName"/>
     <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingTypeName"/>
-    <rule ref="category/java/codestyle.xml/LocalVariableNamingConventions">
+    <rule ref="category/java/codestyle.xml/LocalVariableNamingConventions" message="Please use the 'camelCase' naming convention.">
         <properties>
             <property name="violationSuppressRegex" value=".*underscore.*"/>
         </properties>
@@ -61,7 +61,7 @@
             <property name="violationSuppressRegex" value=".*underscore.*"/>
         </properties>
     </rule>
-    <rule ref="category/java/codestyle.xml/FormalParameterNamingConventions">
+    <rule ref="category/java/codestyle.xml/FormalParameterNamingConventions" message="Please use the 'camelCase' naming convention.">
         <properties>
             <property name="violationSuppressRegex" value=".*underscore.*"/>
         </properties>
@@ -76,7 +76,7 @@
             <property name="violationSuppressRegex" value=".*underscore.*"/>
         </properties>
     </rule>
-    <rule ref="category/java/codestyle.xml/MethodNamingConventions">
+    <rule ref="category/java/codestyle.xml/MethodNamingConventions" message="Please use the 'camelCase' naming convention.">
         <properties>
             <property name="violationSuppressRegex" value=".*underscore.*"/>
         </properties>
