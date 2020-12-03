@@ -8,13 +8,6 @@ import nl.utwente.processing.pmd.symbols.ProcessingAppletMethodCategory
 /**
  * Class which implements the decentralized drawing smell as a PMD rule.
  */
-// Done: Check if a method declaration is shape.
-// Done: Check if called method contains shape call.
-// TODO: Check if constructor is dirty.
-// TODO: Check init and method after that.
-// TODO: Check if local method is dirty.
-// TODO: Check if conditional statements are clean.
-// TODO: Add support for ArrayClass and Map items.
 class DecentralizedDrawingRule : AbstractJavaRule() {
     private val targetMethods = listOf<ProcessingAppletMethodCategory>(
             ProcessingAppletMethodCategory.SHAPE,
@@ -28,12 +21,18 @@ class DecentralizedDrawingRule : AbstractJavaRule() {
 
     private val globalVariables = HashMap<String, ASTClassOrInterfaceDeclaration?>()
     private val classDeclarations = HashMap<ASTClassOrInterfaceDeclaration, ArrayList<ASTMethodDeclaration>>()
+    private val stringToMethodDeclarations = HashMap<String, ASTMethodDeclaration>()
+    private val violatingMethods = ArrayList<ASTMethodDeclaration>()
+
 
     override fun visit(node: ASTCompilationUnit, data: Any): Any? {
         for (classDec in node.findDescendantsOfType(ASTClassOrInterfaceDeclaration::class.java)) {
             val methodList = ArrayList<ASTMethodDeclaration>()
             for (method in classDec.findDescendantsOfType(ASTMethodDeclaration::class.java)) {
                 methodList.add(method)
+                if (!classDec.isNested) {
+                    stringToMethodDeclarations[method.name] = method
+                }
             }
             classDeclarations[classDec] = methodList
         }
@@ -58,14 +57,21 @@ class DecentralizedDrawingRule : AbstractJavaRule() {
         return super.visit(node, data)
     }
 
+    override fun visit(node: ASTMethodDeclaration, data: Any): Any? {
+        if (violatingMethods.contains(node)) {
+            this.addViolationWithMessage(data, node, message, kotlin.arrayOf(node.getFirstDescendantOfType(ASTName::class.java).image
+                    , node.name))
+        }
+        return super.visit(node, data)
+    }
+
     private fun checkStatementExpressions(statements: List<ASTStatementExpression>, node: ASTClassOrInterfaceDeclaration, data: Any) {
         val localVariables = extractLocalVariables(statements[0].getFirstParentOfType(ASTMethodDeclaration::class.java))
         for (statement in statements) {
             if (isTargetShapeMethod(statement.getFirstDescendantOfType(ASTName::class.java).image)) {
-                this.addViolationWithMessage(data, node, message, kotlin.arrayOf(statement.getFirstDescendantOfType(ASTName::class.java).image
-                        , statement.getFirstParentOfType(ASTMethodDeclaration::class.java).name))
+                violatingMethods.add(statement.getFirstParentOfType(ASTMethodDeclaration::class.java)) // Check if method is target method
             }
-            if (statement.getFirstDescendantOfType(ASTName::class.java).image.contains('.')) {
+            if (statement.getFirstDescendantOfType(ASTName::class.java).image.contains('.')) { // Check if method is called from an instantiated class.
                 val expression = statement.getFirstDescendantOfType(ASTName::class.java).image.split('.')
                 if (globalVariables.containsKey(expression[0])) {
                     checkClassMethod(expression[1], globalVariables[expression[0]], node, data)
@@ -73,10 +79,14 @@ class DecentralizedDrawingRule : AbstractJavaRule() {
                     checkClassMethod(expression[1], localVariables[expression[0]], node, data)
                 }
             }
+            if (stringToMethodDeclarations.containsKey(statement.getFirstDescendantOfType(ASTName::class.java).image)) { // Check if method is from the Main Tab.
+                checkClassMethod(statement.getFirstDescendantOfType(ASTName::class.java).image, statement.getFirstParentOfType(ASTClassOrInterfaceDeclaration::class.java)
+                        , node, data)
+            }
         }
     }
 
-    private fun checkClassMethod(targetMethod: String, targetClass: ASTClassOrInterfaceDeclaration?,node: ASTClassOrInterfaceDeclaration , data: Any) {
+    private fun checkClassMethod(targetMethod: String, targetClass: ASTClassOrInterfaceDeclaration?, node: ASTClassOrInterfaceDeclaration, data: Any) {
         for (method in targetClass?.findDescendantsOfType(ASTMethodDeclaration::class.java)!!) {
             if (method.name == targetMethod) {
                 checkStatementExpressions(method.findDescendantsOfType(ASTStatementExpression::class.java), node, data)
