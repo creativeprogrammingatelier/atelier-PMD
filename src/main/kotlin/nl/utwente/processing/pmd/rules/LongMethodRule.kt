@@ -1,9 +1,6 @@
 package nl.utwente.processing.pmd.rules
 
-import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
-import net.sourceforge.pmd.lang.java.ast.ASTName
-import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix
-import net.sourceforge.pmd.lang.java.ast.ASTStatementExpression
+import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.metrics.api.JavaOperationMetricKey
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.lang.metrics.MetricsUtil
@@ -55,7 +52,7 @@ class LongMethodRule : AbstractJavaRule() {
             i++
         }
         if ((ncss - blockOffset) > 50.0) {
-            this.addViolationWithMessage(data, node, message, arrayOf(node.name, ncss))
+            this.addViolationWithMessage(data, node.getFirstDescendantOfType(ASTResultType::class.java), message, arrayOf(node.name, ncss))
         }
         return super.visit(node, data)
     }
