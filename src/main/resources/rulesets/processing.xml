@@ -194,13 +194,4 @@
         </description>
         <priority>3</priority>
     </rule>
-
-    <rule name = "ReservedMethodNamesRule"
-          message="The method name {0} is already reserved in Processing, please use another name."
-          class="nl.utwente.processing.pmd.rules.ReservedMethodNamesRule">
-        <description>
-            Method within classes must have the same name as those of the reserved methods in Processing, eg. "draw" or "setup".
-        </description>
-        <priority>3</priority>
-    </rule>
 </ruleset>
