@@ -1,19 +1,19 @@
 package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.lang.java.ast.*
-import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.lang.java.symboltable.ClassScope
 import net.sourceforge.pmd.lang.java.symboltable.SourceFileScope
 import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration
 import net.sourceforge.pmd.lang.symboltable.Scope
 import net.sourceforge.pmd.util.StringUtil
+import nl.utwente.processing.pmd.AbstractProcessingRule
 import nl.utwente.processing.pmd.utils.increment
 
 /**
  * Class which implements the God Class design smell as PMD rule. Heavily based on the original PMD implementation,
  * except this implementation treats inner classes as different classes.
  */
-class GodClassRule : AbstractJavaRule() {
+class GodClassRule : AbstractProcessingRule() {
 
     /**
      * If debug is true, always print a violation, even when metrics values are still within limits.
@@ -93,10 +93,10 @@ class GodClassRule : AbstractJavaRule() {
         if ((this.wmcCounter.getOrDefault(scope, 0) >= WMC_VERY_HIGH &&
                         this.atfdCounter.getOrDefault(scope, 0) > FEW_THRESHOLD &&
                         tcc < ONE_THIRD_THRESHOLD) || DEBUG) {
-            this.addViolationWithMessage(data, node, message,
+                            // TODO: Main tab not checked, ask Ansgar.
+            this.addViolationWithMessage(data, node, message, node.beginLine, node.beginLine,
                     kotlin.arrayOf(node.image, this.wmcCounter[scope], this.atfdCounter[scope], tcc))
         }
-
         this.currentClassScope = oldScope
         return result
     }

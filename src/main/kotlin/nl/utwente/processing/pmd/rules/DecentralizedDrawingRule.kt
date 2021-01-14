@@ -59,7 +59,7 @@ class DecentralizedDrawingRule : AbstractJavaRule() {
 
     override fun visit(node: ASTMethodDeclaration, data: Any): Any? {
         if (violatingMethods.contains(node)) {
-            this.addViolationWithMessage(data, node, message, kotlin.arrayOf(node.getFirstDescendantOfType(ASTName::class.java).image
+            this.addViolationWithMessage(data, node.getFirstDescendantOfType(ASTResultType::class.java), message, kotlin.arrayOf(node.getFirstDescendantOfType(ASTName::class.java).image
                     , node.name))
         }
         return super.visit(node, data)

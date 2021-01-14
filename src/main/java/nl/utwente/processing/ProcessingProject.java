@@ -40,6 +40,8 @@ public class ProcessingProject {
     /** Find the file and line number from the combined project string */
     public LineInFile mapProjectLineNumber(int line) {
         var l = line;
+        if (l == 0)
+            throw new IndexOutOfBoundsException(l);
         for (int i = 0; i < files.size(); i++) {
             var fileSize = countChars('\n', files.get(i).getContent()) + 1;
             if (fileSize >= l) {
