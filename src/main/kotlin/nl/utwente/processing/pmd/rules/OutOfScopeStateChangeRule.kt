@@ -3,8 +3,12 @@ package nl.utwente.processing.pmd.rules
 import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.lang.java.symboltable.ClassScope
+import net.sourceforge.pmd.lang.java.symboltable.MethodScope
 import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence
+import kotlin.collections.ArrayList
+import kotlin.math.exp
+import kotlin.math.expm1
 
 /**
  * Class that implements the OutOfScopeStateChange rule.
@@ -19,38 +23,54 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence
  */
 class OutOfScopeStateChangeRule: AbstractJavaRule() {
 
-    /**
-     * Entry point for visitor. The visitor takes a class declaration and checks, for each class, if the
-     * ASTStatementExpression within the methods, it then checks if the expression changes the state of a
-     * variable that is outside the scope of the class declaring the method.
-     */
+    private var classDeclarations  = ArrayList<String>()
+    private var methodDeclarations = ArrayList<String>()
+    private var currentClassName = ""
+    private var currentMethodName = ""
+
+    /* Constructor Handler */
     override fun visit(node: ASTClassOrInterfaceDeclaration, data: Any): Any? {
-        val scope = node.scope as? ClassScope // Extract the scope of the class.
-        val nodeVariableDeclarations = extractImages(scope?.variableDeclarations!!) // Extract names of the variables declared by the class.
-        for (declaration in node.declarations) { // Iterate through ASTMethodOrConstructor declarations within the scope of the class.
-            if (declaration.kind == ASTAnyTypeBodyDeclaration.DeclarationKind.METHOD) { // Check whether declarations is method.
-                val method = declaration.declarationNode as? ASTMethodDeclaration // Extracts the ASTMethodDeclaration.
-                for (expression in method?.body?.findDescendantsOfType(ASTStatementExpression::class.java)!!) { // Iterate through all ASTStatementExpressions within the method body.
-                    if (expression.hasDescendantOfType(ASTAssignmentOperator::class.java) &&
-                            !nodeVariableDeclarations.contains(expression.getFirstDescendantOfType(ASTName::class.java).image)) { // If the statement expressions changes the state of a variable
-                                                                                                                                  // and if that variable is outside the scope of the class.
-                        this.addViolationWithMessage(data, node, message,
-                                arrayOf(expression.getFirstDescendantOfType(ASTName::class.java).image, "method " + method.name))  // If yes, add violation with method format.
-                    }
-                }
-            } else if (declaration.kind == ASTAnyTypeBodyDeclaration.DeclarationKind.CONSTRUCTOR) { // Checks if the declaration is a constructor.
-                val constructor = declaration.declarationNode as? ASTConstructorDeclaration // Extracts the ASTConstructorDeclaration, from here the logic is the same as method check.
-                for (expression in constructor?.findDescendantsOfType(ASTStatementExpression::class.java)!!) {
-                    if (expression.hasDescendantOfType(ASTAssignmentOperator::class.java) &&
-                            !nodeVariableDeclarations.contains(expression.getFirstDescendantOfType(ASTName::class.java).image)) {
-                        this.addViolationWithMessage(data, node, message,
-                                arrayOf(expression.getFirstDescendantOfType(ASTName::class.java).image, "Constructor"))
+        val constructor = node.getFirstDescendantOfType(ASTConstructorDeclaration::class.java)
+        if (constructor != null) {
+            val nodeScope = extractImages((node.scope as? ClassScope)?.variableDeclarations!!)
+            val constScope = extractImages((constructor.scope as? MethodScope)?.variableDeclarations!!)
+            for (expression in constructor.findDescendantsOfType(ASTStatementExpression::class.java)) {
+                if (expression.hasDescendantOfType(ASTAssignmentOperator::class.java)) {
+                    val varName = expression.getFirstDescendantOfType(ASTName::class.java).image
+                    if (!nodeScope.contains(varName) && !constScope.contains(varName)) {
+                        this.addViolationWithMessage(data, expression, message,
+                                arrayOf(varName, "Constructor"))
                     }
                 }
             }
         }
         return super.visit(node, data)
     }
+
+    /* Method Handler */
+    override fun visit(node: ASTMethodDeclaration, data: Any): Any? {
+        val currentClass = node.getFirstParentOfType(ASTClassOrInterfaceDeclaration::class.java)
+        if (currentClass.simpleName != currentClassName) {
+            currentClassName = currentClass.simpleName
+            classDeclarations = extractImages((currentClass.scope as? ClassScope)?.variableDeclarations!!)
+        }
+        if (node.name != currentMethodName) {
+            currentMethodName = node.name
+            methodDeclarations = extractImages((node.scope as? MethodScope)?.variableDeclarations!!)
+        }
+        for (expression in node.findDescendantsOfType(ASTStatementExpression::class.java)) {
+            if (expression.hasDescendantOfType(ASTAssignmentOperator::class.java)) {
+                val varName = expression.getFirstDescendantOfType(ASTName::class.java).image
+                if (!classDeclarations.contains(varName) && !methodDeclarations.contains(varName)) {
+                    this.addViolationWithMessage(data, expression, message,
+                            arrayOf(varName, currentMethodName))
+                }
+            }
+        }
+        return super.visit(node, data)
+    }
+
+    /* Helper Methods */
 
     /**
      * Function for extracting the variable names for all variables withing a ClassScope's scope.
