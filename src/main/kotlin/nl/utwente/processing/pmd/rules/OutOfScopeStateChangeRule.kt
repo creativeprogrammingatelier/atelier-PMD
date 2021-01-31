@@ -36,7 +36,11 @@ class OutOfScopeStateChangeRule: AbstractJavaRule() {
             val constScope = extractImages((constructor.scope as? MethodScope)?.variableDeclarations!!)
             for (expression in constructor.findDescendantsOfType(ASTStatementExpression::class.java)) {
                 if (expression.hasDescendantOfType(ASTAssignmentOperator::class.java)) {
-                    val varName = expression.getFirstDescendantOfType(ASTName::class.java).image
+                    /* It's this long since it need to account for a possible 'this' being in front of variable */
+                    val varName = if (expression.getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
+                                    .hasDescendantOfType(ASTName::class.java))
+                        expression.getFirstDescendantOfType(ASTName::class.java).image else
+                        expression.getFirstDescendantOfType(ASTPrimarySuffix::class.java).image
                     if (!nodeScope.contains(varName) && !constScope.contains(varName)) {
                         this.addViolationWithMessage(data, expression, message,
                                 arrayOf(varName, "Constructor"))
@@ -60,7 +64,11 @@ class OutOfScopeStateChangeRule: AbstractJavaRule() {
         }
         for (expression in node.findDescendantsOfType(ASTStatementExpression::class.java)) {
             if (expression.hasDescendantOfType(ASTAssignmentOperator::class.java)) {
-                val varName = expression.getFirstDescendantOfType(ASTName::class.java).image
+                /* It's this long since it need to account for a possible 'this' being in front of variable */
+                val varName = if (expression.getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
+                                .hasDescendantOfType(ASTName::class.java))
+                                    expression.getFirstDescendantOfType(ASTName::class.java).image else
+                                        expression.getFirstDescendantOfType(ASTPrimarySuffix::class.java).image
                 if (!classDeclarations.contains(varName) && !methodDeclarations.contains(varName)) {
                     this.addViolationWithMessage(data, expression, message,
                             arrayOf(varName, currentMethodName))
