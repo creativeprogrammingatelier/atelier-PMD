@@ -32,11 +32,7 @@
     <rule ref="category/java/codestyle.xml/ControlStatementBraces" />
     <rule ref="category/java/performance.xml/AddEmptyString"/>
     <rule ref="category/java/errorprone.xml/AssignmentInOperand"/>
-    <rule ref="category/java/codestyle.xml/AtLeastOneConstructor" message="Class {0} should have a constructor.">
-        <properties>
-            <property name="violationSuppressRegex" value=".*Processing.*"/>
-        </properties>
-    </rule>
+    <rule ref="category/java/codestyle.xml/AtLeastOneConstructor"/>
     <rule ref="category/java/design.xml/SingularField">
         <properties>
             <property name="checkInnerClasses" value="true"/>
