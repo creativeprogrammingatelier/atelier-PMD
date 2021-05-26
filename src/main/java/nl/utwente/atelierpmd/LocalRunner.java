@@ -89,14 +89,19 @@ public class LocalRunner {
         @Override
         public void end() {
             for (var err : errors) {
-                System.out.println("! Got error: " + err.getMsg() + "\n");
+                if (err.getMsg().contains("Processing.pde")) {
+                    System.out.println("Error during program load, ZITA could not properly read the program files.");
+                }
+                else {
+                    System.out.println("! Got error: " + err.getMsg() + "\n");
+                }
             }
         }
     }
 
     public static void main(String[] args) throws IOException, PMDException {
         if (args.length < 1) {
-            System.out.println("Usage: <project path>");
+            System.out.println("Usage: C:\\Users\\Hackerman\\Downloads\\sketch_4_1");
             return;
         }
 

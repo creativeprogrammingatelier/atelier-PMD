@@ -42,10 +42,12 @@ class DecentralizedDrawingRule : AbstractJavaRule() {
     override fun visit(node: ASTClassOrInterfaceDeclaration, data: Any): Any? {
         if (!node.isNested) {
             for (field in node.findDescendantsOfType(ASTFieldDeclaration::class.java)) {
-                val classDec= getClassDeclaration(field.getFirstDescendantOfType(ASTClassOrInterfaceType::class.java).image
-                        , node)
-                if (classDec != null) {
-                    globalVariables[field.getFirstDescendantOfType(ASTVariableDeclaratorId::class.java).name] = classDec
+                if (field.getFirstDescendantOfType(ASTClassOrInterfaceType::class.java) != null) {
+                    val classDec = getClassDeclaration(field.getFirstDescendantOfType(ASTClassOrInterfaceType::class.java).image
+                            , node)
+                    if (classDec != null) {
+                        globalVariables[field.getFirstDescendantOfType(ASTVariableDeclaratorId::class.java).name] = classDec
+                    }
                 }
             }
             for (method in node.findDescendantsOfType(ASTMethodDeclaration::class.java)) {
@@ -98,10 +100,12 @@ class DecentralizedDrawingRule : AbstractJavaRule() {
         val res = HashMap<String, ASTClassOrInterfaceDeclaration>()
         for (localVariable in method.findDescendantsOfType(ASTLocalVariableDeclaration::class.java)) {
             val varName = localVariable.getFirstDescendantOfType(ASTVariableDeclaratorId::class.java).name
-            val varClass = getClassDeclaration(localVariable.getFirstDescendantOfType(ASTClassOrInterfaceType::class.java).image
-                    , method.getFirstParentOfType(ASTClassOrInterfaceDeclaration::class.java))
-            if (varName != "kotlin.Unit" && varClass != null) {
-                res[varName] = varClass
+            if (localVariable.getFirstDescendantOfType(ASTClassOrInterfaceType::class.java) != null) {
+                val varClass = getClassDeclaration(localVariable.getFirstDescendantOfType(ASTClassOrInterfaceType::class.java).image
+                        , method.getFirstParentOfType(ASTClassOrInterfaceDeclaration::class.java))
+                if (varName != "kotlin.Unit" && varClass != null) {
+                    res[varName] = varClass
+                }
             }
         }
         return res

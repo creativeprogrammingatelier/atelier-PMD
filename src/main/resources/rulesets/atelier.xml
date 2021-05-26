@@ -52,7 +52,7 @@
             <property name="violationSuppressRegex" value=".*underscore.*"/>
         </properties>
     </rule>
-    <rule ref="category/java/codestyle.xml/FieldNamingConventions">
+    <rule ref="category/java/codestyle.xml/FieldNamingConventions" message="The {0} name ''{1}'' does not match the 'camelCase' naming convention.">
         <properties>
             <property name="violationSuppressRegex" value=".*underscore.*"/>
         </properties>
