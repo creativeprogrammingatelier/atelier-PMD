@@ -101,7 +101,7 @@ public class LocalRunner {
 
     public static void main(String[] args) throws IOException, PMDException {
         if (args.length < 1) {
-            System.out.println("Usage: C:\\Users\\Hackerman\\Downloads\\sketch_4_1");
+            System.out.println("Usage: <project path>");
             return;
         }
 

@@ -36,17 +36,19 @@ class LongMethodRule : AbstractJavaRule() {
         var blockOffset = 0.0
         var i = 0
         while (i < expressions.size) {
-            val methodName = expressions[i].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
-                    .getFirstDescendantOfType(ASTName::class.java).image
-            if (isShapeMethod(methodName) && i < expressions.size - 1) {
-                for (j in i + 1 until expressions.size) {
-                    val nextMethodName = expressions[j].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
-                            .getFirstDescendantOfType(ASTName::class.java).image
-                    if (!isShapeMethod(nextMethodName)) {
-                        i = j
-                        break
+            if (!expressions[i].hasDescendantOfType(ASTAssignmentOperator::class.java)) {
+                val methodName = expressions[i].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
+                        .getFirstDescendantOfType(ASTName::class.java).image
+                if (isShapeMethod(methodName) && i < expressions.size - 1) {
+                    for (j in i + 1 until expressions.size) {
+                        val nextMethodName = expressions[j].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
+                                .getFirstDescendantOfType(ASTName::class.java).image
+                        if (!isShapeMethod(nextMethodName)) {
+                            i = j
+                            break
+                        }
+                        blockOffset++
                     }
-                    blockOffset++
                 }
             }
             i++
