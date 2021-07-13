@@ -1,0 +1,36 @@
+# This is the main CI pipeline. It builds the Docker image on every
+# occasion, but only pushes it to the registry when ran on master.
+name: pipeline
+
+# Run when a commit is pushed, a pull request is started or updated and
+# when asked to run manually using the Actions tab
+on: [ push, pull_request, workflow_dispatch ]
+
+jobs:
+# Build the Docker image and optionally push it to the GitHub Container Registry
+  build_push:
+    runs-on: ubuntu-latest
+
+    steps:
+        # Check out the repository in the $GITHUB_WORKSPACE folder
+      - uses: actions/checkout@v2
+        # Get the short hash for the current commit (to use later)
+      - id: git_sha
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        # Login to the GitHub Container Registry, so that we can push the image
+      - name: Login to ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        # Build and push the image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2.3.0
+        with:
+          pull: true # Always pull for the latest base images
+          push: ${{ github.ref == 'refs/heads/master' }} # Push the image if on the master branch
+          # Push to the latest tag and to a tag that is the commit hash
+          tags: |
+            ghcr.io/creativeprogrammingatelier/atelier-pmd:latest
+            ghcr.io/creativeprogrammingatelier/atelier-pmd:${{ steps.git_sha.outputs.sha_short }}
