@@ -47,7 +47,6 @@ class OutOfScopeStateChangeRule: AbstractJavaRule() {
                             expression.getFirstDescendantOfType(ASTPrimarySuffix::class.java).image
                         varName = if (varName.contains(".")) varName.split(".")[0] else varName
                         if (!nodeScope.contains(varName) && !constScope.contains(varName) && globalDeclarations.contains(varName)) {
-                            println("Adding Violation for (Class): " + varName);
                             this.addViolationWithMessage(data, expression, message,
                                     arrayOf(varName, "Constructor"))
                         }
@@ -78,7 +77,6 @@ class OutOfScopeStateChangeRule: AbstractJavaRule() {
                                         expression.getFirstDescendantOfType(ASTPrimarySuffix::class.java).image
                 varName = if (varName.contains(".")) varName.split(".")[0] else varName
                 if (!classDeclarations.contains(varName) && !methodDeclarations.contains(varName) && globalDeclarations.contains(varName)) {
-                    println("Adding Violation for (Method): " + varName);
                     this.addViolationWithMessage(data, expression, message,
                             arrayOf(varName, currentMethodName))
                 }

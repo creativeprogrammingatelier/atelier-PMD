@@ -3,7 +3,10 @@ package nl.utwente.atelier.pmd;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
@@ -16,6 +19,7 @@ import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.exceptions.CryptoException;
 import nl.utwente.processing.LineInFile;
 import nl.utwente.processing.ProcessingProject;
+import org.antlr.v4.runtime.tree.Tree;
 
 /** PMD violation and error renderer that submits comments to Atelier */
 public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
@@ -68,6 +72,8 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     @Override
     public void renderFileViolations(Iterator<RuleViolation> violations) throws IOException {
+        Map<String, JsonObject> mRuleViolationMessages = new TreeMap<>(); // <File Name for Violation, JSON Object for API>
+        Map<String, Integer> mRuleViolationStatistics  = new HashMap<>(); // <Rule Name, Violation Count>
         while (violations.hasNext()) {
             var violation = violations.next();
 
@@ -84,6 +90,14 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             } catch (IndexOutOfBoundsException ex) {
                 System.out.println("Dismissing violation: Line number is not in a source file");
                 continue;
+            }
+
+            String sRuleName = mAddSpacesToString(violation.getRule().getName()).trim();
+            if (mRuleViolationStatistics.containsKey(sRuleName)) {
+                mRuleViolationStatistics.replace(sRuleName, mRuleViolationStatistics.get(sRuleName) + 1);
+            }
+            else {
+                mRuleViolationStatistics.put(sRuleName, 1);
             }
 
             var lineStart = begin.getLine();
@@ -113,6 +127,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             snippetEnd.addProperty("character", charEnd);
             snippet.add("end", snippetEnd);
             json.add("snippet", snippet);
+            json.addProperty("rule", violation.getRule().getName());
 
             // Set the default visibility to private
             json.addProperty("visibility", "private");
@@ -121,12 +136,45 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             // Set the text of the comment
             json.addProperty("comment", violation.getDescription());
 
+            mRuleViolationMessages.put(begin.getFile().getId(), json);
+        }
+
+        StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary for " + submissionID + ":\n");
+        for (String sKey :
+                mRuleViolationStatistics.keySet()) {
+            sbSummaryMessage.append("  ").append(mRuleViolationStatistics.get(sKey)).append(" ").append((mRuleViolationStatistics.get(sKey) == 1) ? "violation" : "violations" ).append(" for rule \"").append(sKey).append("\".\n");
+        }
+        sbSummaryMessage.append("\n");
+
+        var oSummaryJson = new JsonObject();
+
+        oSummaryJson.addProperty("submissionID", submissionID);
+        oSummaryJson.addProperty("visibility", "private");
+        oSummaryJson.addProperty("comment", sbSummaryMessage.toString());
+        oSummaryJson.addProperty("automated", true);
+
+        try {
+            var res = api.postProjectComment(submissionID, oSummaryJson);
+            if (res.getStatusLine().getStatusCode() == 200) {
+                var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
+                var threadID = resJson.getAsJsonObject().get("ID").getAsString();
+                System.out.println("Made ZITA Summary comment " + threadID + " for submission " + submissionID);
+            } else {
+                System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
+            }
+        } catch (CryptoException | NullPointerException e) {
+            e.printStackTrace();
+        }
+
+        for (String sFile :
+             mRuleViolationMessages.keySet()) {
+            var json = mRuleViolationMessages.get(sFile);
             try {
-                var res = api.postComment(begin.getFile().getId(), json);
+                var res = api.postComment(sFile, json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
-                    System.out.println("Made comment " + threadID + " for rule " + violation.getRule().getName());
+                    System.out.println("Made comment " + threadID + " for rule " + json.get("rule").getAsString());
                 } else {
                     System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
                 }
@@ -165,5 +213,12 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
         System.out.println("Ending renderer for " + submissionID);
 
         this.getWriter().close();
+    }
+
+    public String mAddSpacesToString(String sWord) {
+        if (sWord.length() == 0) {
+            return "";
+        }
+        return ((Character.isUpperCase(sWord.charAt(0)) ? " " : "") + sWord.charAt(0) + mAddSpacesToString(sWord.substring(1)));
     }
 }
