@@ -53,11 +53,11 @@ class LongMethodRule : AbstractJavaRule() {
                         }
                     }
                 }
+            } 
+            // We don't care about the exception, because it just indicates that this is not the pattern we are looking for
+            // and we should just count this statement as a single line
+            finally {
                 i++
-            }
-            catch (e: Exception) {
-                i++
-                continue
             }
         }
         if ((ncss - blockOffset) > 50.0) {

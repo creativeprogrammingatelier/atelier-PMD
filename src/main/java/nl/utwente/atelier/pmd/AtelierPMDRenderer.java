@@ -19,7 +19,6 @@ import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.exceptions.CryptoException;
 import nl.utwente.processing.LineInFile;
 import nl.utwente.processing.ProcessingProject;
-import org.antlr.v4.runtime.tree.Tree;
 
 /** PMD violation and error renderer that submits comments to Atelier */
 public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
@@ -139,7 +138,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             mRuleViolationMessages.put(begin.getFile().getId(), json);
         }
 
-        StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary for " + submissionID + ":\n");
+        StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary:\n");
         for (String sKey :
                 mRuleViolationStatistics.keySet()) {
             sbSummaryMessage.append("  ").append(mRuleViolationStatistics.get(sKey)).append(" ").append((mRuleViolationStatistics.get(sKey) == 1) ? "violation" : "violations" ).append(" for rule \"").append(sKey).append("\".\n");
