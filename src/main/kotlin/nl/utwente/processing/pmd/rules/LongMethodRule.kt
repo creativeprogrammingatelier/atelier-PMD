@@ -6,6 +6,7 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.lang.metrics.MetricsUtil
 import nl.utwente.processing.pmd.symbols.ProcessingApplet
 import nl.utwente.processing.pmd.symbols.ProcessingAppletMethodCategory
+import java.lang.Exception
 
 /**
  * Class which implements the long method smell as PMD rule. Based on the NcssMethodCountRule in PMD. The class has
@@ -36,22 +37,28 @@ class LongMethodRule : AbstractJavaRule() {
         var blockOffset = 0.0
         var i = 0
         while (i < expressions.size) {
-            if (!expressions[i].hasDescendantOfType(ASTAssignmentOperator::class.java)) {
-                val methodName = expressions[i].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
+            try {
+                if (!expressions[i].hasDescendantOfType(ASTAssignmentOperator::class.java)) {
+                    val methodName = expressions[i].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
                         .getFirstDescendantOfType(ASTName::class.java).image
-                if (isShapeMethod(methodName) && i < expressions.size - 1) {
-                    for (j in i + 1 until expressions.size) {
-                        val nextMethodName = expressions[j].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
+                    if (isShapeMethod(methodName) && i < expressions.size - 1) {
+                        for (j in i + 1 until expressions.size) {
+                            val nextMethodName = expressions[j].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
                                 .getFirstDescendantOfType(ASTName::class.java).image
-                        if (!isShapeMethod(nextMethodName)) {
-                            i = j
-                            break
+                            if (!isShapeMethod(nextMethodName)) {
+                                i = j
+                                break
+                            }
+                            blockOffset++
                         }
-                        blockOffset++
                     }
                 }
+            } 
+            // We don't care about the exception, because it just indicates that this is not the pattern we are looking for
+            // and we should just count this statement as a single line
+            finally {
+                i++
             }
-            i++
         }
         if ((ncss - blockOffset) > 50.0) {
             this.addViolationWithMessage(data, node.getFirstDescendantOfType(ASTResultType::class.java), message, arrayOf(node.name, ncss))

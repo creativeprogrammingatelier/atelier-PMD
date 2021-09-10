@@ -70,6 +70,9 @@ class DecentralizedDrawingRule : AbstractJavaRule() {
     private fun checkStatementExpressions(statements: List<ASTStatementExpression>, node: ASTClassOrInterfaceDeclaration, data: Any) {
         val localVariables = extractLocalVariables(statements[0].getFirstParentOfType(ASTMethodDeclaration::class.java))
         for (statement in statements) {
+            if (statement.getFirstDescendantOfType(ASTName::class.java) == null) {
+                continue
+            }
             if (isTargetShapeMethod(statement.getFirstDescendantOfType(ASTName::class.java).image)) {
                 violatingMethods.add(statement.getFirstParentOfType(ASTMethodDeclaration::class.java)) // Check if method is target method
             }
