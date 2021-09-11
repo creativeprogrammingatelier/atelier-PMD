@@ -3,10 +3,7 @@ package nl.utwente.atelier.pmd;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
@@ -19,7 +16,6 @@ import nl.utwente.atelier.api.AtelierAPI;
 import nl.utwente.atelier.exceptions.CryptoException;
 import nl.utwente.processing.LineInFile;
 import nl.utwente.processing.ProcessingProject;
-import org.antlr.v4.runtime.tree.Tree;
 
 /** PMD violation and error renderer that submits comments to Atelier */
 public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
@@ -72,7 +68,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     @Override
     public void renderFileViolations(Iterator<RuleViolation> violations) throws IOException {
-        Map<String, JsonObject> mRuleViolationMessages = new TreeMap<>(); // <File Name for Violation, JSON Object for API>
+        List<JsonObject> liRulesVilations = new ArrayList<>(); // <File Name for Violation, JSON Object for API>
         Map<String, Integer> mRuleViolationStatistics  = new HashMap<>(); // <Rule Name, Violation Count>
         while (violations.hasNext()) {
             var violation = violations.next();
@@ -128,6 +124,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             snippet.add("end", snippetEnd);
             json.add("snippet", snippet);
             json.addProperty("rule", violation.getRule().getName());
+            json.addProperty("file", begin.getFile().getId());
 
             // Set the default visibility to private
             json.addProperty("visibility", "private");
@@ -136,7 +133,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             // Set the text of the comment
             json.addProperty("comment", violation.getDescription());
 
-            mRuleViolationMessages.put(begin.getFile().getId(), json);
+            liRulesVilations.add(json);
         }
 
         StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary for " + submissionID + ":\n");
@@ -166,11 +163,10 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             e.printStackTrace();
         }
 
-        for (String sFile :
-             mRuleViolationMessages.keySet()) {
-            var json = mRuleViolationMessages.get(sFile);
+        for (JsonObject json :
+             liRulesVilations) {
             try {
-                var res = api.postComment(sFile, json);
+                var res = api.postComment(json.get("file").getAsString(), json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
