@@ -68,7 +68,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
     @Override
     public void renderFileViolations(Iterator<RuleViolation> violations) throws IOException {
-        List<JsonObject> liRulesVilations = new ArrayList<>(); // <File Name for Violation, JSON Object for API>
+        List<JsonObject> liRuleViolations = new ArrayList<>(); // <File Name for Violation, JSON Object for API>
         Map<String, Integer> mRuleViolationStatistics  = new HashMap<>(); // <Rule Name, Violation Count>
         while (violations.hasNext()) {
             var violation = violations.next();
@@ -133,7 +133,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             // Set the text of the comment
             json.addProperty("comment", violation.getDescription());
 
-            liRulesVilations.add(json);
+            liRuleViolations.add(json);
         }
 
         StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary:\n");
@@ -164,7 +164,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
         }
 
         for (JsonObject json :
-             liRulesVilations) {
+             liRuleViolations) {
             try {
                 var res = api.postComment(json.get("file").getAsString(), json);
                 if (res.getStatusLine().getStatusCode() == 200) {
