@@ -136,7 +136,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             liRulesVilations.add(json);
         }
 
-        StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary for " + submissionID + ":\n");
+        StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary:\n");
         for (String sKey :
                 mRuleViolationStatistics.keySet()) {
             sbSummaryMessage.append("  ").append(mRuleViolationStatistics.get(sKey)).append(" ").append((mRuleViolationStatistics.get(sKey) == 1) ? "violation" : "violations" ).append(" for rule \"").append(sKey).append("\".\n");

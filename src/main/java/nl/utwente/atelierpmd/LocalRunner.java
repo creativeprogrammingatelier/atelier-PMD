@@ -8,8 +8,6 @@ import nl.utwente.processing.ProcessingProject;
 import nl.utwente.processing.pmd.PMDException;
 import nl.utwente.processing.pmd.PMDRunner;
 
-import java.awt.font.ShapeGraphicAttribute;
-import java.awt.image.AreaAveragingScaleFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -101,7 +99,7 @@ public class LocalRunner {
             }
 
             /* Generate Summary Comment  */
-            StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary for " + "submission" + ":\n");
+            StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary for:\n");
             for (String sKey :
                     mViolations.keySet()) {
                 sbSummaryMessage.append("  ").append(mViolations.get(sKey)).append(" ").append((mViolations.get(sKey) == 1) ? "violation" : "violations" ).append(" for rule \"").append(sKey).append("\".\n");
