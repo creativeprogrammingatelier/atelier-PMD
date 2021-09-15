@@ -67,7 +67,7 @@
             <property name="minimum" value="24"/>
         </properties>
     </rule>
-    <rule ref="category/java/codestyle.xml/ClassNamingConventions">
+    <rule ref="category/java/codestyle.xml/ClassNamingConventions" message="Please have class names start with Capitol letters and use 'camelCase'">
         <properties>
             <property name="violationSuppressRegex" value=".*underscore.*"/>
         </properties>

@@ -1,21 +1,19 @@
 package nl.utwente.atelier.pmd;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
+import nl.utwente.atelier.api.AtelierAPI;
+import nl.utwente.atelier.exceptions.CryptoException;
+import nl.utwente.processing.LineInFile;
+import nl.utwente.processing.ProcessingProject;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import net.sourceforge.pmd.RuleViolation;
-import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
-
-import nl.utwente.atelier.api.AtelierAPI;
-import nl.utwente.atelier.exceptions.CryptoException;
-import nl.utwente.processing.LineInFile;
-import nl.utwente.processing.ProcessingProject;
 
 /** PMD violation and error renderer that submits comments to Atelier */
 public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
@@ -136,31 +134,20 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             liRuleViolations.add(json);
         }
 
-        StringBuilder sbSummaryMessage = new StringBuilder("ZITA Summary:\n");
-        for (String sKey :
-                mRuleViolationStatistics.keySet()) {
-            sbSummaryMessage.append("  ").append(mRuleViolationStatistics.get(sKey)).append(" ").append((mRuleViolationStatistics.get(sKey) == 1) ? "violation" : "violations" ).append(" for rule \"").append(sKey).append("\".\n");
-        }
-        sbSummaryMessage.append("\n");
-
-        var oSummaryJson = new JsonObject();
-
-        oSummaryJson.addProperty("submissionID", submissionID);
-        oSummaryJson.addProperty("visibility", "private");
-        oSummaryJson.addProperty("comment", sbSummaryMessage.toString());
-        oSummaryJson.addProperty("automated", true);
-
-        try {
-            var res = api.postProjectComment(submissionID, oSummaryJson);
-            if (res.getStatusLine().getStatusCode() == 200) {
-                var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
-                var threadID = resJson.getAsJsonObject().get("ID").getAsString();
-                System.out.println("Made ZITA Summary comment " + threadID + " for submission " + submissionID);
-            } else {
-                System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
+        for (JsonObject oSummaryJson :
+                mGetSummaryMessage(mRuleViolationStatistics)) {
+            try {
+                var res = api.postProjectComment(submissionID, oSummaryJson);
+                if (res.getStatusLine().getStatusCode() == 200) {
+                    var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
+                    var threadID = resJson.getAsJsonObject().get("ID").getAsString();
+                    System.out.println("Made ZITA Summary comment " + threadID + " for submission " + submissionID);
+                } else {
+                    System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
+                }
+            } catch (CryptoException | NullPointerException e) {
+                e.printStackTrace();
             }
-        } catch (CryptoException | NullPointerException e) {
-            e.printStackTrace();
         }
 
         for (JsonObject json :
@@ -210,8 +197,92 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
 
         this.getWriter().close();
     }
+    
+    private List<JsonObject> mGetSummaryMessage(Map<String, Integer> mRuleViolationStatistics) {
+        List<JsonObject> liResult = new ArrayList<JsonObject>();
 
-    public String mAddSpacesToString(String sWord) {
+        JsonObject oPrivateMessage = new JsonObject();
+        oPrivateMessage.addProperty("submissionID", submissionID);
+        oPrivateMessage.addProperty("visibility", "private");
+        oPrivateMessage.addProperty("automated", true);
+
+        JsonObject oPublicMessage = new JsonObject();
+        oPublicMessage.addProperty("submissionID", submissionID);
+        oPublicMessage.addProperty("visibility", "public");
+        oPublicMessage.addProperty("automated", true);
+
+        StringBuilder sbPrivateMessage = new StringBuilder();
+        sbPrivateMessage.append("ZITA Summary:\n");
+
+        StringBuilder sbPublicMessage = new StringBuilder();
+        float iViolationScore = 0;
+        boolean[] arViolationFlags = new boolean[] { // Probably better to use a bit mask maybe.
+            false, // DecentralizedEventHandlingRule Flag
+            false, // GodClass flag.
+            false  // OutOfScopeStateChangeRule Flag/
+        };
+
+        for (String sKey :
+                mRuleViolationStatistics.keySet()) {
+            sbPrivateMessage.append("  ").append(mRuleViolationStatistics.get(sKey)).append(" ").append((mRuleViolationStatistics.get(sKey) == 1) ? "violation" : "violations" ).append(" for rule \"").append(sKey).append("\".");
+
+            switch (sKey.replace(" ", "")) {
+                case "LongParameterListRule":
+                case "ClassNamingConventions":
+                case "FieldNamingConventions":
+                case "ControlStatementBraces":
+                    iViolationScore += 0.5; // Low Severity
+                    break;
+                case "DecentralizedEventHandlingRule":
+                    iViolationScore += 2; // High Severity
+                    arViolationFlags[0] = true;
+                    break;
+                case "GodClassRule":
+                    iViolationScore += 2; // High Severity
+                    arViolationFlags[1] = true;
+                    break;
+                case "OutOfScopeStateChangeRule":
+                    iViolationScore += 2; // High Severity
+                    arViolationFlags[2] = true;
+                    break;
+                default:
+                    iViolationScore += 1; // Standard Severity.
+                    break;
+            }
+        }
+
+        // Standard response message.
+        if (iViolationScore == 0) {
+            sbPublicMessage.append("There are no obvious problems in your code, but feel free to talk to a TA");
+        }
+        else if (iViolationScore < 5) {
+            sbPublicMessage.append("There are a few potential problems, worth discussing with a TA.");
+        }
+        else if (iViolationScore < 10) {
+            sbPublicMessage.append("There are many different potential problems. Please discuss your code with a TA.");
+        }
+        else {
+            sbPublicMessage.append("There quite a lot of potential problems with your code, Discussion with a TA is highly encouraged.");
+        }
+
+        // If serious rule violation occurs add a custom message so that the student will be notified.
+        if (arViolationFlags[0] || arViolationFlags[1] || arViolationFlags[2]) {
+            sbPublicMessage.append("\n\nAdditionally, the following serious rule violations were discovered:");
+            if (arViolationFlags[0]) sbPublicMessage.append("\n  - Usage of event handling variables in draw methods.");
+            if (arViolationFlags[1]) sbPublicMessage.append("\n  - Too much responsibility given to a single class.");
+            if (arViolationFlags[2]) sbPublicMessage.append("\n  - Changing the state of variables not defined within the scope of their class or method, potentially being global.");
+            sbPublicMessage.append("\n\nIt is highly encouraged to speak to a TA about the violations that have been detected");
+        }
+
+        oPrivateMessage.addProperty("comment", sbPrivateMessage.toString());
+        oPublicMessage.addProperty("comment", sbPublicMessage.toString());
+
+        liResult.add(oPrivateMessage);
+        liResult.add(oPublicMessage);
+        return liResult;
+    }
+
+    private String mAddSpacesToString(String sWord) {
         if (sWord.length() == 0) {
             return "";
         }
