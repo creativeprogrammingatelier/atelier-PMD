@@ -255,10 +255,10 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
         if (iViolationScore == 0) {
             sbPublicMessage.append("There are no obvious problems in your code, but feel free to talk to a TA");
         }
-        else if (iViolationScore < 5) {
+        else if (iViolationScore <= 3) {
             sbPublicMessage.append("There are a few potential problems, worth discussing with a TA.");
         }
-        else if (iViolationScore < 10) {
+        else if (iViolationScore <= 7) {
             sbPublicMessage.append("There are many different potential problems. Please discuss your code with a TA.");
         }
         else {
