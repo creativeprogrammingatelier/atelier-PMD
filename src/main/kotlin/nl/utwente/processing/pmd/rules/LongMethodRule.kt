@@ -7,6 +7,7 @@ import net.sourceforge.pmd.lang.metrics.MetricsUtil
 import nl.utwente.processing.pmd.symbols.ProcessingApplet
 import nl.utwente.processing.pmd.symbols.ProcessingAppletMethodCategory
 import java.lang.Exception
+import java.lang.IllegalStateException
 
 /**
  * Class which implements the long method smell as PMD rule. Based on the NcssMethodCountRule in PMD. The class has
@@ -33,14 +34,21 @@ class LongMethodRule : AbstractJavaRule() {
      */
     override fun visit(node: ASTMethodDeclaration, data: Any?): Any? {
         val ncss = MetricsUtil.computeMetric(JavaOperationMetricKey.NCSS, node)
+
+        if (!node.hasDescendantOfType(ASTStatementExpression::class.java))  return super.visit(node, data) // Filters abstract classes.
+
         val expressions = node.body.findDescendantsOfType(ASTStatementExpression::class.java)
         var blockOffset = 0.0
         var i = 0
         while (i < expressions.size) {
             try {
                 if (!expressions[i].hasDescendantOfType(ASTAssignmentOperator::class.java)) {
-                    val methodName = expressions[i].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
-                        .getFirstDescendantOfType(ASTName::class.java).image
+//                    println(expressions[i].getFirstDescendantOfType(ASTPrimaryPrefix::class.java).getFirstDescendantOfType(ASTName::class.java).image);
+                    val method = expressions[i].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
+                    var methodName = ""
+                    if (method.hasDescendantOfType(ASTName::class.java)) {
+                        methodName = method.getFirstDescendantOfType(ASTName::class.java).image
+                    }
                     if (isShapeMethod(methodName) && i < expressions.size - 1) {
                         for (j in i + 1 until expressions.size) {
                             val nextMethodName = expressions[j].getFirstDescendantOfType(ASTPrimaryPrefix::class.java)
@@ -53,7 +61,10 @@ class LongMethodRule : AbstractJavaRule() {
                         }
                     }
                 }
-            } 
+            }
+            catch (e: IllegalStateException) {
+                // Suppress Exception
+            }
             // We don't care about the exception, because it just indicates that this is not the pattern we are looking for
             // and we should just count this statement as a single line
             finally {

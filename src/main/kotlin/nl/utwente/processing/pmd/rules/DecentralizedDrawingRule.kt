@@ -42,9 +42,8 @@ class DecentralizedDrawingRule : AbstractJavaRule() {
     override fun visit(node: ASTClassOrInterfaceDeclaration, data: Any): Any? {
         if (!node.isNested) {
             for (field in node.findDescendantsOfType(ASTFieldDeclaration::class.java)) {
-                if (field.getFirstDescendantOfType(ASTClassOrInterfaceType::class.java) != null) {
-                    val classDec = getClassDeclaration(field.getFirstDescendantOfType(ASTClassOrInterfaceType::class.java).image
-                            , node)
+                if (field.getFirstParentOfType(ASTClassOrInterfaceDeclaration::class.java) != null) {
+                    val classDec = field.getFirstParentOfType(ASTClassOrInterfaceDeclaration::class.java)
                     if (classDec != null) {
                         globalVariables[field.getFirstDescendantOfType(ASTVariableDeclaratorId::class.java).name] = classDec
                     }
@@ -73,7 +72,7 @@ class DecentralizedDrawingRule : AbstractJavaRule() {
             if (statement.getFirstDescendantOfType(ASTName::class.java) == null) {
                 continue
             }
-            if (isTargetShapeMethod(statement.getFirstDescendantOfType(ASTName::class.java).image)) {
+            if (isTargetShapeMethod(statement.getFirstDescendantOfType(ASTName::class.java).image) && !statement.hasDescendantOfType(ASTAssignmentOperator::class.java)) {
                 violatingMethods.add(statement.getFirstParentOfType(ASTMethodDeclaration::class.java)) // Check if method is target method
             }
             if (statement.getFirstDescendantOfType(ASTName::class.java).image.contains('.')) { // Check if method is called from an instantiated class.
