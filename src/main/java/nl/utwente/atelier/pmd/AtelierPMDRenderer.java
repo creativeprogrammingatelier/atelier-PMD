@@ -212,19 +212,17 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
         oPublicMessage.addProperty("automated", true);
 
         StringBuilder sbPrivateMessage = new StringBuilder();
-        sbPrivateMessage.append("ZITA Summary:\n");
+        sbPrivateMessage.append("ZITA Summary:");
 
         StringBuilder sbPublicMessage = new StringBuilder();
         float iViolationScore = 0;
-        boolean[] arViolationFlags = new boolean[] { // Probably better to use a bit mask maybe.
-            false, // DecentralizedEventHandlingRule Flag
-            false, // GodClass flag.
-            false  // OutOfScopeStateChangeRule Flag/
-        };
+        boolean bDecentralizedEventHandlingRule_Flag = false;
+        boolean bGodClassRule_Flag = false;
+        boolean bOutOfScopeStateChangeRule_Flag = false;
 
         for (String sKey :
                 mRuleViolationStatistics.keySet()) {
-            sbPrivateMessage.append("  ").append(mRuleViolationStatistics.get(sKey)).append(" ").append((mRuleViolationStatistics.get(sKey) == 1) ? "violation" : "violations" ).append(" for rule \"").append(sKey).append("\".");
+            sbPrivateMessage.append("\n  ").append(mRuleViolationStatistics.get(sKey)).append(" ").append((mRuleViolationStatistics.get(sKey) == 1) ? "violation" : "violations" ).append(" for rule \"").append(sKey).append("\".");
 
             switch (sKey.replace(" ", "")) {
                 case "LongParameterListRule":
@@ -235,15 +233,15 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
                     break;
                 case "DecentralizedEventHandlingRule":
                     iViolationScore += 2; // High Severity
-                    arViolationFlags[0] = true;
+                    bDecentralizedEventHandlingRule_Flag = true;
                     break;
                 case "GodClassRule":
                     iViolationScore += 2; // High Severity
-                    arViolationFlags[1] = true;
+                    bGodClassRule_Flag = true;
                     break;
                 case "OutOfScopeStateChangeRule":
                     iViolationScore += 2; // High Severity
-                    arViolationFlags[2] = true;
+                    bOutOfScopeStateChangeRule_Flag = true;
                     break;
                 default:
                     iViolationScore += 1; // Standard Severity.
@@ -262,15 +260,15 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
             sbPublicMessage.append("There are many different potential problems. Please discuss your code with a TA.");
         }
         else {
-            sbPublicMessage.append("There quite a lot of potential problems with your code, Discussion with a TA is highly encouraged.");
+            sbPublicMessage.append("There are quite a lot of potential problems with your code. Discussion with a TA is highly encouraged.");
         }
 
         // If serious rule violation occurs add a custom message so that the student will be notified.
-        if (arViolationFlags[0] || arViolationFlags[1] || arViolationFlags[2]) {
-            sbPublicMessage.append("\n\nAdditionally, the following serious rule violations were discovered:");
-            if (arViolationFlags[0]) sbPublicMessage.append("\n  - Usage of event handling variables in draw methods.");
-            if (arViolationFlags[1]) sbPublicMessage.append("\n  - Too much responsibility given to a single class.");
-            if (arViolationFlags[2]) sbPublicMessage.append("\n  - Changing the state of variables not defined within the scope of their class or method, potentially being global.");
+        if (bDecentralizedEventHandlingRule_Flag || bGodClassRule_Flag || bOutOfScopeStateChangeRule_Flag) {
+            sbPublicMessage.append("\n\nAdditionally, the following serious programming mistakes were discovered:");
+            if (bDecentralizedEventHandlingRule_Flag) sbPublicMessage.append("\n  - Usage of event handling variables in draw methods.");
+            if (bGodClassRule_Flag) sbPublicMessage.append("\n  - Too much responsibility given to a single class.");
+            if (bOutOfScopeStateChangeRule_Flag) sbPublicMessage.append("\n  - Changing the state of variables not defined within the scope of their class or method, potentially being global.");
             sbPublicMessage.append("\n\nIt is highly encouraged to speak to a TA about the violations that have been detected");
         }
 
