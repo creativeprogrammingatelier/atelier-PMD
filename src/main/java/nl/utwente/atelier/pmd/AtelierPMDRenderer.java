@@ -140,6 +140,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
                 var res = api.postProjectComment(submissionID, oSummaryJson);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
+                    res.close();
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
                     System.out.println("Made ZITA Summary comment " + threadID + " for submission " + submissionID);
                 } else {
@@ -156,6 +157,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
                 var res = api.postComment(json.get("file").getAsString(), json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
+                    res.close();
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
                     System.out.println("Made comment " + threadID + " for rule " + json.get("rule").getAsString());
                 } else {
@@ -183,6 +185,7 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
                 var res = api.postProjectComment(submissionID, json);
                 if (res.getStatusLine().getStatusCode() == 200) {
                     var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
+                    res.close();
                     var threadID = resJson.getAsJsonObject().get("ID").getAsString();
                     System.out.println("Made comment " + threadID + " for an error");
                 } else {

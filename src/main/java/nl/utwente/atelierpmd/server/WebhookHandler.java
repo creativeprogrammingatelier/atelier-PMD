@@ -128,6 +128,7 @@ public class WebhookHandler {
                         var res = api.getFile(fileID);
                         if (res.getStatusLine().getStatusCode() < 400) {
                             var fileContent = new String(res.getEntity().getContent().readAllBytes());
+                            res.close();
                             return new ProcessingFile(fileID, fileName, fileContent);
                         } else {
                             var message = String.format("Request for file %s returned status %d.", fileID, res.getStatusLine().getStatusCode());
@@ -159,6 +160,7 @@ public class WebhookHandler {
             var res = api.getFile(fileID);
             if (res.getStatusLine().getStatusCode() < 400) {
                 var fileContent = new String(res.getEntity().getContent().readAllBytes());
+                res.close();
                 var files = Collections.singletonList(new ProcessingFile(fileID, fileName, fileContent));
                 var project = new ProcessingProject(files);
                 var renderer = new AtelierPMDRenderer(submissionID, project, api);
