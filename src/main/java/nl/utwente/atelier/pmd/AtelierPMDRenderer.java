@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /** PMD violation and error renderer that submits comments to Atelier */
-public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
+public class AtelierPMDRenderer extends AbstractIncrementingRenderer implements ErrorRenderer {
 
     private final String submissionID;
     private final ProcessingProject project;
@@ -173,34 +173,38 @@ public class AtelierPMDRenderer extends AbstractIncrementingRenderer {
     public void end() throws IOException {
         for (var err : errors) {
             System.out.println("Got error: " + err.getMsg());
-
-            var json = new JsonObject();
-
-            json.addProperty("submissionID", submissionID);
-            json.addProperty("visibility", "private");
-            json.addProperty("comment", err.getMsg());
-            json.addProperty("automated", true);
-
-            try {
-                var res = api.postProjectComment(submissionID, json);
-                if (res.getStatusLine().getStatusCode() == 200) {
-                    var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
-                    res.close();
-                    var threadID = resJson.getAsJsonObject().get("ID").getAsString();
-                    System.out.println("Made comment " + threadID + " for an error");
-                } else {
-                    System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
-                }
-            } catch (CryptoException | NullPointerException e) {
-                e.printStackTrace();
-            }
+            this.renderError(err.getMsg());
         }
 
         System.out.println("Ending renderer for " + submissionID);
 
         this.getWriter().close();
     }
-    
+
+    @Override
+    public void renderError(String errorMessage) {
+        var json = new JsonObject();
+
+        json.addProperty("submissionID", submissionID);
+        json.addProperty("visibility", "private");
+        json.addProperty("comment", "ZITA failed to run on this project: " + errorMessage);
+        json.addProperty("automated", true);
+
+        try {
+            var res = api.postProjectComment(submissionID, json);
+            if (res.getStatusLine().getStatusCode() == 200) {
+                var resJson = JsonParser.parseReader(new InputStreamReader(res.getEntity().getContent()));
+                res.close();
+                var threadID = resJson.getAsJsonObject().get("ID").getAsString();
+                System.out.println("Made comment " + threadID + " for an error");
+            } else {
+                System.out.println("Request to make comment failed. Got status " + res.getStatusLine().getStatusCode());
+            }
+        } catch (CryptoException | NullPointerException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private List<JsonObject> mGetSummaryMessage(Map<String, Integer> mRuleViolationStatistics) {
         List<JsonObject> liResult = new ArrayList<JsonObject>();
 

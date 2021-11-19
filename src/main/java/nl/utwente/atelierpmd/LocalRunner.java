@@ -2,6 +2,7 @@ package nl.utwente.atelierpmd;
 
 import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
+import nl.utwente.atelier.pmd.ErrorRenderer;
 import nl.utwente.processing.LineInFile;
 import nl.utwente.processing.ProcessingFile;
 import nl.utwente.processing.ProcessingProject;
@@ -26,7 +27,7 @@ public class LocalRunner {
         }
     }
 
-    static class AtelierStyleTextRenderer extends AbstractIncrementingRenderer {
+    static class AtelierStyleTextRenderer extends AbstractIncrementingRenderer implements ErrorRenderer {
         private final ProcessingProject project;
 
         public AtelierStyleTextRenderer(ProcessingProject project) {
@@ -112,6 +113,11 @@ public class LocalRunner {
                     liViolations) {
                 System.out.println(sMsg);
             }
+        }
+
+        @Override
+        public void renderError(String errorMessage) {
+            System.out.println("! Got error: " + errorMessage + "\n");
         }
 
         @Override

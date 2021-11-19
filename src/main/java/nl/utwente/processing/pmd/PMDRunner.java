@@ -1,10 +1,10 @@
 package nl.utwente.processing.pmd;
 
 import net.sourceforge.pmd.*;
-import net.sourceforge.pmd.renderers.Renderer;
 import net.sourceforge.pmd.util.ClasspathClassLoader;
 import net.sourceforge.pmd.util.datasource.DataSource;
 import net.sourceforge.pmd.util.datasource.ReaderDataSource;
+import nl.utwente.atelier.pmd.ErrorRenderer;
 import nl.utwente.processing.ProcessingProject;
 
 import java.io.StringReader;
@@ -32,7 +32,7 @@ public class PMDRunner {
     }
 
     /** Run a list of files through PMD, sending the results to the provided renderer */
-    public void Run(ProcessingProject project, Renderer renderer) throws PMDException {
+    public void Run(ProcessingProject project, ErrorRenderer renderer) throws PMDException {
         try {
             renderer.start();
 
@@ -48,6 +48,9 @@ public class PMDRunner {
                         new RuleContext(),
                         Collections.singletonList(renderer)
                 );
+            } catch (Throwable e) {
+                renderer.renderError(e.getMessage());
+                throw e;
             } finally {
                 ClassLoader auxiliaryClassLoader = config.getClassLoader();
                 if (auxiliaryClassLoader instanceof ClasspathClassLoader) {
@@ -57,7 +60,7 @@ public class PMDRunner {
 
             renderer.end();
             renderer.flush();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new PMDException(e);
         }
     }
